@@ -10,19 +10,16 @@ class Prop:
     def __invert__(self):
         return Not(self)
 
-class Variable(Prop):
+class PropositionalVariable(Prop):
+     def __init__(self, name):
+         self.name = name
 
-    def __init__(this, proposition, variable, quantifier = 'ALL'):
-        this.proposition = proposition
-        this.variable = variable
-        this.quantifier = quantifier
+     def __repr__(self):
+         return self.name
 
-    def __repr__(this):
-        return '{}{}{}({})'.format(chars[this.quantifier], this.variable, this.proposition, this.variable)
-
-    @property
-    def variables(self):
-        return frozenset(self.variable)
+     @property
+     def variables(self):
+         return frozenset(self.name)
 
 class UnaryOp(Prop):
     def __init__(self, arg):
@@ -57,7 +54,7 @@ class Not(UnaryOp):
         return self.arg
 
 def variables(n):
-    return [Variable(c, 'x') for c in string.ascii_uppercase[:n]]
+    return [PropositionalVariable(c) for c in string.ascii_uppercase[:n]]
 
 TRANSFORMS = []
 
@@ -87,7 +84,7 @@ def de_morgan_and(x):
 
 def rgen(n=3, depth=0):
     vs = variables(n)
-    if depth<5 or random.random() > 1/5:
+    if depth<5 and random.random() > 1/5:
         x = random.random()
         if x < 1/3:
             return ~rgen(n, depth+1)
@@ -97,4 +94,3 @@ def rgen(n=3, depth=0):
             return rgen(n, depth+1) | rgen(n, depth+1)
     else:
         return random.choice(vs)
-    return ~(x)
