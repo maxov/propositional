@@ -1,4 +1,5 @@
 import string
+import random
 
 class Prop:
     def __or__(self, that):
@@ -73,4 +74,22 @@ def isa(tpe):
 @transform(isa(Or))
 def de_morgan_or(x):
     l, r = x.left, x.right
-    return ~(x.)
+    return ~(~l & ~r)
+
+@transform(isa(And))
+def de_morgan_and(x):
+    l, r = x.left, x.right
+    return ~(~l | ~r)
+
+def rgen(n=3, depth=0):
+    vs = variables(n)
+    if depth<5 or random.random() > 1/5:
+        x = random.random()
+        if x < 1/3:
+            return ~rgen(n, depth+1)
+        elif x < 2/3:
+            return rgen(n, depth+1) & rgen(n, depth+1)
+        else:
+            return rgen(n, depth+1) | rgen(n, depth+1)
+    else:
+        return random.choice(vs)
