@@ -42,7 +42,6 @@ class BinaryOp(Prop):
         return self.left.variables | self.right.variables
 
 class Quantifier(Prop):
-    self.char = ""
 
     def __init__(self, qvar):
         self.qvar = qvar
