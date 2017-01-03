@@ -43,7 +43,22 @@ class Prop:
         for truth in opts(o):
             print_row(truth, self(truth))
 
-#Are also functions
+
+class Const(Prop):
+
+    def __init__(self, value):
+        self.value = value
+
+    @property
+    def ord(self):
+        return -1
+
+    def __repr__(self):
+        return single_letter(self.value)
+
+    def __call__(self, values):
+        return self.value
+
 class PropositionalVariable(Prop):
     def __init__(self, name):
         self.name = name
@@ -176,8 +191,8 @@ def rgen(n=3, depth=0):
 
 A, B, C, D, E = VS[:5]
 
-T = A | ~A
-F = A & ~A
+T = Const(True)
+F = Const(False)
 
 #Takes in a propositional logic statement string and parses it
 def tokenize(props_str):
