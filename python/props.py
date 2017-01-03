@@ -12,6 +12,7 @@ class Prop:
     def __eq__(self, that):
         pass
 
+#Are also functions
 class PropositionalVariable(Prop):
     def __init__(self, name):
         self.name = name
@@ -88,7 +89,8 @@ class Not(UnaryOp):
 def variables(n):
     return [PropositionalVariable(c) for c in string.ascii_uppercase[:n]]
 
-def truth(*variables):
+#basically only these variables are true
+def onlyMakeTheseTrue(*variables):
     vs = [False] * 26
     for v in variables:
         vs[v.ord] = True
