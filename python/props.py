@@ -2,6 +2,30 @@ import string
 import random
 chars = {'ALL': '∀', 'EXISTS': '∃', 'EQUIVALENT': '≡', 'AND': '∧', 'OR': '∨', 'NOT': '¬'}
 
+def opts(n):
+    if n == 0:
+        yield []
+    else:
+        for v in opts(n-1):
+            yield [True] + v
+        for v in opts(n-1):
+            yield [False] + v
+
+def char(i):
+    return chr(ord('A') + i)
+
+def print_header(o, e):
+    print(' '.join(char(i) for i in range(o)) + ' ' + str(e))
+
+def single_letter(b):
+    if b:
+        return 'T'
+    else:
+        return 'F'
+
+def print_row(truth, result):
+    print(' '.join(single_letter(truth[i]) for i in range(len(truth))) + ' ' + single_letter(result))
+
 class Prop:
     def __or__(self, that):
         return Or(self, that)
@@ -10,7 +34,16 @@ class Prop:
     def __invert__(self):
         return Not(self)
     def __eq__(self, that):
-        pass
+        o = max(self.ord, that.ord) + 1
+        for truth in opts(o):
+            if self(truth) != that(truth):
+                return False
+        return True
+    def table(self):
+        o = self.ord + 1
+        print_header(o, self)
+        for truth in opts(o):
+            print_row(truth, self(truth))
 
 #Are also functions
 class PropositionalVariable(Prop):
@@ -100,10 +133,10 @@ VS = variables(26)
 
 TRANSFORMS = []
 
-def T(obj):
+def always_T(obj):
     return True
 
-def transform(condition=T):
+def transform(condition=always_T):
     def inner(fn):
         TRANSFORMS.append((condition, fn))
         return fn
@@ -138,3 +171,9 @@ def rgen(n=3, depth=0):
         return random.choice(VS[:n])
 
 A, B, C, D, E = VS[:5]
+
+T = A | ~A
+F = A & ~A
+
+def implies(a, b):
+    return ~a | b
