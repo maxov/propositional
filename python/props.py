@@ -14,34 +14,32 @@ def opts(n):
 def char(i):
     return chr(ord('A') + i)
 
-def print_header(o, e):
-    print(' '.join(char(i) for i in range(o)) + ' ' + str(e))
-
-def single_letter(b):
-    if b:
-        return 'T'
-    else:
-        return 'F'
-
-def print_row(truth, result):
-    print(' '.join(single_letter(truth[i]) for i in range(len(truth))) + ' ' + single_letter(result))
-
 class Prop:
     def __or__(self, that):
         return Or(self, that)
+
     def __and__(self, that):
         return And(self, that)
+
     def __invert__(self):
         return Not(self)
+
     def __eq__(self, that):
-        o = max(self.ord, that.ord) + 1
-        for truth in opts(o):
-            if self(truth) != that(truth):
-                return False
-        return True
+        return all([self(truth) == that(truth) for truth in opts(max(self.ord, that.ord) + 1)])
+
     def table(self):
+        def print_header(o, e):
+            print(' '.join(char(i) for i in range(o)) + ' ' + str(e))
+
+        def print_row(truth, result):
+            print(' '.join(single_letter(truth[i]) for i in range(len(truth))) + ' ' + single_letter(result))
+
+        def single_letter(b):
+            return 'T' if b else 'F'
+
         o = self.ord + 1
         print_header(o, self)
+        
         for truth in opts(o):
             print_row(truth, self(truth))
 
@@ -63,6 +61,7 @@ class PropositionalVariable(Prop):
 class UnaryOp(Prop):
     def __init__(self, arg):
         self.arg = arg
+
     def __repr__(self):
         return '{}{}'.format(self.symbol, self.arg)
 
@@ -86,16 +85,15 @@ class Quantifier(Prop):
     char = ""
 
     def __init__(self, qvar, prop):
-        self.qvar = qvar
-        self.prop = prop
+        self.qvar, self.prop = qvar, prop
 
     def __repr__(self):
         return '({}{}{})'.format(self.char, self.qvar, self.prop)
 
-class All(BinaryOp):
+class All(Quantifier):
     char = chars['ALL']
 
-class Exists(BinaryOp):
+class Exists(Quantifier):
     char = chars['EXISTS']
 
 class Or(BinaryOp):
@@ -122,16 +120,14 @@ class Not(UnaryOp):
 def variables(n):
     return [PropositionalVariable(c) for c in string.ascii_uppercase[:n]]
 
-#basically only these variables are true
-def onlyMakeTheseTrue(*variables):
+#Returns an array of boolean values corresponding to truthfulness of their uppercase equivalents
+def makesTrue(*variables):
     vs = [False] * 26
     for v in variables:
         vs[v.ord] = True
     return vs
 
-VS = variables(26)
-
-TRANSFORMS = []
+VS, TRANSFORMS = variables(26), []
 
 def always_T(obj):
     return True
@@ -157,9 +153,17 @@ def de_morgan_and(x):
     l, r = x.left, x.right
     return ~(~l | ~r)
 
+def implies(a, b):
+    return ~a | b
+
+'''
+Random generator function that takes in two ints: n and depth
+n corresponds to number of random variables used in statement
+depth corresponds to the maximum allocated depth of statement
+'''
 def rgen(n=3, depth=0):
     vs = variables(n)
-    if depth<3 and random.random() > 1/5:
+    if depth < 3 and random.random() > (depth/3)/5:
         x = random.random()
         if x < 1/3:
             return ~rgen(n, depth+1)
@@ -175,5 +179,24 @@ A, B, C, D, E = VS[:5]
 T = A | ~A
 F = A & ~A
 
-def implies(a, b):
-    return ~a | b
+#Takes in a propositional logic statement string and parses it
+def tokenize(props_str):
+    if props_str[0] != '(':
+        if props_str[0] == chars['NOT']:
+            return not tokenize(props_str[1:])
+        return props_str[0]
+    else:
+        num_parens, loc, foundMedian = 0, 0, False
+        while loc < len(props_str)-1 and not foundMedian:
+            loc += 1
+            if props_str[loc] == '(':
+                num_parens += 1
+            elif props_str[loc] == ')':
+                num_parens -= 1
+            elif (props_str[loc] == '∧' or props_str[loc] == '∨') and num_parens == 0:
+                foundMedian, median = True, props_str[loc]
+                first, last = props_str[1:loc-1], props_str[loc+2:len(props_str)-1]
+                print(first + " " + median + " " + last)
+                tokenize(first)
+                tokenize(last)
+
