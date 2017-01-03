@@ -42,19 +42,20 @@ class BinaryOp(Prop):
         return self.left.variables | self.right.variables
 
 class Quantifier(Prop):
-    self.char = ""
+    char = ""
 
-    def __init__(self, qvar):
+    def __init__(self, qvar, prop):
         self.qvar = qvar
+        self.prop = prop
 
     def __repr__(self):
-        return '{}{}'.format(self.char, self.qvar)
+        return '({}{}{})'.format(self.char, self.qvar, self.prop)
 
 class All(BinaryOp):
-    self.char = symbol = chars['ALL']
+    char = chars['ALL']
 
 class Exists(BinaryOp):
-    self.char = symbol = chars['EXISTS']
+    char = chars['EXISTS']
 
 class Or(BinaryOp):
     symbol = chars['OR']
