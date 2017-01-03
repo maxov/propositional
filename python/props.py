@@ -9,15 +9,19 @@ class Prop:
         return Not(self)
 
 class Variable(Prop):
-    def __init__(self, name):
-        self.name = name
+    chars = {'EVERY': '∀', 'EXISTS': '∃', 'EQUIVALENT': '≡', 'AND': '∧', 'OR': '∨',}
 
-    def __repr__(self):
-        return self.name
+    def __init__(this, proposition, variable, quantifier = 'EVERY'):
+        this.proposition = proposition
+        this.variable = variable
+        this.quantifier = quantifier
+
+    def __repr__(this):
+        return '{}{}{}({})'.format(this.chars[this.quantifier], this.variable, this.proposition, this.variable)
 
     @property
     def variables(self):
-        return frozenset(self.name)
+        return frozenset(self.variable)
 
 class UnaryOp(Prop):
     def __init__(self, arg):
@@ -73,4 +77,4 @@ def isa(tpe):
 @transform(isa(Or))
 def de_morgan_or(x):
     l, r = x.left, x.right
-    return ~(x.)
+    return ~(x)
