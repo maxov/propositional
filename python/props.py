@@ -156,6 +156,7 @@ def de_morgan_and(x):
     return ~(~l | ~r)
 
 def rgen(n=3, depth=0):
+    vs = variables(n)
     if depth<3 and random.random() > 1/5:
         x = random.random()
         if x < 1/3:
