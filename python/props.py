@@ -7,7 +7,7 @@ class Prop:
         return Or(self, that)
     def __and__(self, that):
         return And(self, that)
-    def __invert__(s3elf):
+    def __invert__(self):
         return Not(self)
 
 class Variable(Prop):
