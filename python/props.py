@@ -1,24 +1,28 @@
 import string
 import random
+chars = {'EVERY': '∀', 'EXISTS': '∃', 'EQUIVALENT': '≡', 'AND': '∧', 'OR': '∨', 'NOT': '¬'}
 
 class Prop:
     def __or__(self, that):
         return Or(self, that)
     def __and__(self, that):
         return And(self, that)
-    def __invert__(self):
+    def __invert__(s3elf):
         return Not(self)
 
 class Variable(Prop):
-    def __init__(self, name):
-        self.name = name
 
-    def __repr__(self):
-        return self.name
+    def __init__(this, proposition, variable, quantifier = 'EVERY'):
+        this.proposition = proposition
+        this.variable = variable
+        this.quantifier = quantifier
+
+    def __repr__(this):
+        return '{}{}{}({})'.format(chars[this.quantifier], this.variable, this.proposition, this.variable)
 
     @property
     def variables(self):
-        return frozenset(self.name)
+        return frozenset(self.variable)
 
 class UnaryOp(Prop):
     def __init__(self, arg):
@@ -41,19 +45,19 @@ class BinaryOp(Prop):
         return self.left.variables | self.right.variables
 
 class Or(BinaryOp):
-    symbol = '|'
+    symbol = chars['OR']
 
 class And(BinaryOp):
-    symbol = '&'
+    symbol = chars['AND']
 
 class Not(UnaryOp):
-    symbol = '!'
+    symbol = chars['NOT']
 
     def __invert__(self):
         return self.arg
 
 def variables(n):
-    return [Variable(c) for c in string.ascii_uppercase[:n]]
+    return [Variable(c, x) for c in string.ascii_uppercase[:n]]
 
 TRANSFORMS = []
 
@@ -93,3 +97,4 @@ def rgen(n=3, depth=0):
             return rgen(n, depth+1) | rgen(n, depth+1)
     else:
         return random.choice(vs)
+    return ~(x)
