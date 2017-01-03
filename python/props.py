@@ -56,7 +56,7 @@ class Not(UnaryOp):
         return self.arg
 
 def variables(n):
-    return [Variable(c) for c in string.ascii_uppercase[:n]]
+    return [Variable(c, x) for c in string.ascii_uppercase[:n]]
 
 TRANSFORMS = []
 
