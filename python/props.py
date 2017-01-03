@@ -100,7 +100,7 @@ def de_morgan_and(x):
 
 def rgen(n=3, depth=0):
     vs = variables(n)
-    if depth<5 and random.random() > 1/5:
+    if depth<(5-random.random()*2) and random.random() > 1/10:
         x = random.random()
         if x < 1/3:
             return ~rgen(n, depth+1)
