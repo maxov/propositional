@@ -28,24 +28,32 @@ class Prop:
         return all([self(truth) == that(truth) for truth in opts(max(self.ord, that.ord) + 1)])
 
     def table(self):
+        print('\n\033[1mPropositional Statement:\033[0m ' + str(self) + "\n")
         def print_header(o, e):
-            print(' '.join(char(i) for i in range(o)) + ' ' + str(e))
+            print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦══' + '═'*len(str(e)) + "══╗")
+            print('║  ' + '  ║  '.join(char(i) for i in range(o)) + '  ║  ' + str(e)+ '  ║')
+            print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '═'*len(str(e)) + "══╣")
 
         def print_row(truth, result):
-            print(' '.join(single_letter(truth[i]) for i in range(len(truth))) + ' ' + single_letter(result))
+            print('║  ' + '  ║  '.join(single_letter(truth[i]) for i in range(len(truth))) \
+                + '  ║  ' + ' ' * (len(str(self))//2) + single_letter(result) + \
+                ' ' * (len(str(self))//2 - (1-len(str(self))%2)) + '  ║')
+
+        def print_footer(o, e):
+            print('╚══' + '══╩══'.join('═' for i in range(o)) + '══╩══' + '═'*len(str(e)) + "══╝")
 
         def single_letter(b):
-            return 'T' if b else 'F'
+            return '\033[92mT\033[0m' if b else '\033[91mF\033[0m'
 
         o = self.ord + 1
+
         print_header(o, self)
-        
         for truth in opts(o):
             print_row(truth, self(truth))
+        print_footer(o, self)
 
 
 class Const(Prop):
-
     def __init__(self, value):
         self.value = value
 
@@ -136,9 +144,9 @@ def variables(n):
     return [PropositionalVariable(c) for c in string.ascii_uppercase[:n]]
 
 #Returns an array of boolean values corresponding to truthfulness of their uppercase equivalents
-def makesTrue(*variables):
-    vs = [False] * 26
-    for v in variables:
+def makesTrue(*vars):
+    vs = variables(26)
+    for v in vars:
         vs[v.ord] = True
     return vs
 
