@@ -1,6 +1,6 @@
 import string
 import random
-chars = {'EVERY': '∀', 'EXISTS': '∃', 'EQUIVALENT': '≡', 'AND': '∧', 'OR': '∨', 'NOT': '¬'}
+chars = {'ALL': '∀', 'EXISTS': '∃', 'EQUIVALENT': '≡', 'AND': '∧', 'OR': '∨', 'NOT': '¬'}
 
 class Prop:
     def __or__(self, that):
@@ -12,7 +12,7 @@ class Prop:
 
 class Variable(Prop):
 
-    def __init__(this, proposition, variable, quantifier = 'EVERY'):
+    def __init__(this, proposition, variable, quantifier = 'ALL'):
         this.proposition = proposition
         this.variable = variable
         this.quantifier = quantifier
