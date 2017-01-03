@@ -9,26 +9,32 @@ class Prop:
         return And(self, that)
     def __invert__(self):
         return Not(self)
+    def __eq__(self, that):
+        pass
 
 class PropositionalVariable(Prop):
-     def __init__(self, name):
-         self.name = name
+    def __init__(self, name):
+        self.name = name
 
-     def __repr__(self):
-         return self.name
+    def __repr__(self):
+        return self.name
 
-     @property
-     def variables(self):
-         return frozenset(self.name)
+    @property
+    def ord(self):
+        return ord(self.name) - ord('A')
+
+    def __call__(self, values):
+        return values[self.ord]
 
 class UnaryOp(Prop):
     def __init__(self, arg):
         self.arg = arg
     def __repr__(self):
         return '{}{}'.format(self.symbol, self.arg)
+
     @property
-    def variables(self):
-        return self.arg.variables
+    def ord(self):
+        return self.arg.ord
 
 class BinaryOp(Prop):
     def __init__(self, left, right):
@@ -37,9 +43,10 @@ class BinaryOp(Prop):
 
     def __repr__(self):
         return '({} {} {})'.format(self.left, self.symbol, self.right)
+
     @property
-    def variables(self):
-        return self.left.variables | self.right.variables
+    def ord(self):
+        return max(self.left.ord, self.right.ord)
 
 class Quantifier(Prop):
     char = ""
@@ -60,8 +67,14 @@ class Exists(BinaryOp):
 class Or(BinaryOp):
     symbol = chars['OR']
 
+    def __call__(self, values):
+        return self.left(values) or self.right(values)
+
 class And(BinaryOp):
     symbol = chars['AND']
+
+    def __call__(self, values):
+        return self.left(values) and self.right(values)
 
 class Not(UnaryOp):
     symbol = chars['NOT']
@@ -69,8 +82,19 @@ class Not(UnaryOp):
     def __invert__(self):
         return self.arg
 
+    def __call__(self, values):
+        return not self.arg(values)
+
 def variables(n):
     return [PropositionalVariable(c) for c in string.ascii_uppercase[:n]]
+
+def truth(*variables):
+    vs = [False] * 26
+    for v in variables:
+        vs[v.ord] = True
+    return vs
+
+VS = variables(26)
 
 TRANSFORMS = []
 
@@ -100,7 +124,7 @@ def de_morgan_and(x):
 
 def rgen(n=3, depth=0):
     vs = variables(n)
-    if depth<(5-random.random()*2) and random.random() > 1/10:
+    if depth<3 and random.random() > 1/5:
         x = random.random()
         if x < 1/3:
             return ~rgen(n, depth+1)
@@ -109,4 +133,6 @@ def rgen(n=3, depth=0):
         else:
             return rgen(n, depth+1) | rgen(n, depth+1)
     else:
-        return random.choice(vs)
+        return random.choice(VS[:n])
+
+A, B, C, D, E = VS[:5]
