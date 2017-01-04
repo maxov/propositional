@@ -1,5 +1,11 @@
-import string
-import random
+"""
+To do list:
+1. Create a class of Propositional Statements that can be evaluated and generated and edited.
+2. Create a multiple choice propositional statement generator that tests one's knowledge of these statements.
+3. Port over system to React Native
+"""
+
+import string, random
 chars = {'ALL': '∀', 'EXISTS': '∃', 'EQUIVALENT': '≡', 'AND': '∧', 'OR': '∨', 'NOT': '¬'}
 
 def opts(n):
@@ -32,21 +38,22 @@ class Prop:
          return True
 
     def table(self):
-        o = self.ord + 1
+        o, s = self.ord + 1, str(self)
+        l = len(str(self))
 
         def print_header():
-            print('\n\033[1mPropositional Statement:\033[0m ' + str(self) + "\n")
-            print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦══' + '═'*len(str(self)) + "══╗")
-            print('║  ' + '  ║  '.join(char(i) for i in range(o)) + '  ║  ' + str(self)+ '  ║')
-            print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '═'*len(str(self)) + "══╣")
+            print('\n\033[1mPropositional Statement:\033[0m ' + s + "\n")
+            print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦══' + '═' * l + "══╗")
+            print('║  ' + '  ║  '.join(char(i) for i in range(o)) + '  ║  ' + s + '  ║')
+            print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '═' * l + "══╣")
 
         def print_row(truth, result):
             print('║  ' + '  ║  '.join(single_letter(truth[i]) for i in range(len(truth))) + \
-                '  ║  ' + ' ' * (len(str(self))//2) + single_letter(result) + \
-                ' ' * (len(str(self))//2 - (1-len(str(self))%2)) + '  ║')
+                '  ║  ' + ' ' * (l // 2) + single_letter(result) + \
+                ' ' * (l // 2 - (1 - l % 2)) + '  ║')
 
         def print_footer():
-            print('╚══' + '══╩══'.join('═' for i in range(o)) + '══╩══' + '═'*len(str(self)) + "══╝")
+            print('╚══' + '══╩══'.join('═' for i in range(o)) + '══╩══' + '═' * l + "══╝")
 
         def single_letter(b):
             return '\033[94mT\033[0m' if b else '\033[91mF\033[0m'
@@ -188,16 +195,16 @@ Random generator function that takes in two ints: n and depth
 n corresponds to number of random variables used in statement
 depth corresponds to the maximum allocated depth of statement
 '''
-def rgen(n=3, depth=0):
+def rgen(n = 3, depth = 0):
     vs = variables(n)
     if depth < 3 and random.random() > (depth/3)/5:
-        x = random.random()
+        x, depth = random.random(), depth + 1
         if x < 1/3:
-            return ~rgen(n, depth+1)
+            return ~rgen(n, depth)
         elif x < 2/3:
-            return rgen(n, depth+1) & rgen(n, depth+1)
+            return rgen(n, depth) & rgen(n, depth)
         else:
-            return rgen(n, depth+1) | rgen(n, depth+1)
+            return rgen(n, depth) | rgen(n, depth)
     else:
         return random.choice(VS[:n])
 
@@ -211,7 +218,7 @@ def tokenize(props_str):
     if props_str[0] != '(':
         if props_str[0] == chars['NOT']:
             return not tokenize(props_str[1:])
-        return props_str[0]
+        return eval(props_str[0])
     else:
         num_parens, loc, foundMedian = 0, 0, False
         while loc < len(props_str)-1 and not foundMedian:
@@ -220,7 +227,7 @@ def tokenize(props_str):
                 num_parens += 1
             elif props_str[loc] == ')':
                 num_parens -= 1
-            elif (props_str[loc] == '∧' or props_str[loc] == '∨') and num_parens == 0:
+            elif (props_str[loc] == chars['AND'] or props_str[loc] == chars['OR']) and num_parens == 0:
                 foundMedian, median = True, props_str[loc]
                 first, last = props_str[1:loc-1], props_str[loc+2:len(props_str)-1]
                 print(first + " " + median + " " + last)
