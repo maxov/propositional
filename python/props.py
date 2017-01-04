@@ -31,8 +31,7 @@ class Prop:
         return Not(self)
 
     def __eq__(self, that):
-         o = max(self.ord, that.ord) + 1
-         return all([self(truth) == that(truth) for truth in opts(o)])
+         return all([self(truth) == that(truth) for truth in opts(max(self.ord, that.ord) + 1)])
 
     def table(self):
         o, s = self.ord + 1, str(self)
