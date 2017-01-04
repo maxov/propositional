@@ -32,10 +32,7 @@ class Prop:
 
     def __eq__(self, that):
          o = max(self.ord, that.ord) + 1
-         for truth in opts(o):
-             if self(truth) != that(truth):
-                 return False
-         return True
+         return all([self(truth) == that(truth) for truth in opts(o)])
 
     def table(self):
         o, s = self.ord + 1, str(self)
