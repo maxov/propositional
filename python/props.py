@@ -33,32 +33,6 @@ class Prop:
     def __eq__(self, that):
         return all([self(truth) == that(truth) for truth in opts(max(self.ord, that.ord) + 1)])
 
-    def table(self):
-        o, s = self.ord + 1, str(self)
-        l = len(str(self))
-
-        def print_header():
-            print('\n\033[1mPropositional Statement:\033[0m ' + s + "\n")
-            print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦══' + '═' * l + "══╗")
-            print('║  ' + '  ║  '.join(char(i) for i in range(o)) + '  ║  ' + s + '  ║')
-            print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '═' * l + "══╣")
-
-        def print_row(truth, result):
-            print('║  ' + '  ║  '.join(single_letter(truth[i]) for i in range(len(truth))) + \
-                '  ║  ' + ' ' * (l // 2) + single_letter(result) + \
-                ' ' * (l // 2 - (1 - l % 2)) + '  ║')
-
-        def print_footer():
-            print('╚══' + '══╩══'.join('═' for i in range(o)) + '══╩══' + '═' * l + "══╝")
-
-        def single_letter(b):
-            return '\033[94mT\033[0m' if b else '\033[91mF\033[0m'
-
-        print_header()
-        for truth in opts(o):
-            print_row(truth, self(truth))
-        print_footer()
-
 
 class Const(Prop):
     def __init__(self, value):
@@ -192,17 +166,19 @@ n corresponds to number of random variables used in statement
 depth corresponds to the maximum allocated depth of statement
 '''
 def rgen(n = 3, depth = 0):
-    vs = variables(n)
-    if depth < 3 and random.random() > (depth/3)/5:
-        x, depth = random.random(), depth + 1
-        if x < 1/3:
-            return Not(rgen(n, depth))
-        elif x < 2/3:
-            return And(rgen(n, depth), rgen(n, depth))
+    def helper(n, depth):
+        vs = variables(n)
+        if depth < 3 and random.random() > (depth/3)/5:
+            x, depth = random.random(), depth + 1
+            if x < 1/3:
+                return Not(helper(n, depth))
+            elif x < 2/3:
+                return And(helper(n, depth), helper(n, depth))
+            else:
+                return Or(helper(n, depth), helper(n, depth))
         else:
-            return Or(rgen(n, depth), rgen(n, depth))
-    else:
-        return random.choice(VS[:n])
+            return random.choice(VS[:n])
+    return helper(n, depth).__repr__()
 
 A, B, C, D, E = VS[:5]
 
@@ -217,15 +193,15 @@ def tokenize(props_str):
                 return Not(helper(props_str[1:]))
             return eval(props_str[0])
         else:
-            num_parens, loc, foundMedian = 0, 0, False
-            while loc < len(props_str)-1 and not foundMedian:
+            num_parens, loc, found = 0, 0, False
+            while loc < len(props_str)-1 and not found:
                 loc += 1
                 if props_str[loc] == '(':
                     num_parens += 1
                 elif props_str[loc] == ')':
                     num_parens -= 1
-                elif (props_str[loc] == chars['AND'] or props_str[loc] == chars['OR']) and num_parens == 0:
-                    foundMedian, median = True, props_str[loc]
+                elif (props_str[loc] == chars['AND'] or props_str[loc] == chars['OR']) and not num_parens:
+                    found, median = True, props_str[loc]
                     first, last = props_str[1:loc-1], props_str[loc+2:len(props_str)-1]
                     return And(helper(first), helper(last)) if median == chars['AND'] \
                     else Or(helper(first), helper(last))
@@ -235,3 +211,29 @@ def replaceStr(str):
     old_chars = {'|': chars['OR'], '~': chars['NOT'], '&': chars['AND']}
     return "".join(s if s not in old_chars else old_chars[s] for s in str)
 
+def table(statement):
+    statement = tokenize(statement)
+    o, s = statement.ord + 1, str(statement)
+    l = len(str(statement))
+
+    def print_header():
+        print('\n\033[1mPropositional Statement:\033[0m ' + s + "\n")
+        print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦══' + '═' * l + "══╗")
+        print('║  ' + '  ║  '.join(char(i) for i in range(o)) + '  ║  ' + s + '  ║')
+        print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '═' * l + "══╣")
+
+    def print_row(truth, result):
+        print('║  ' + '  ║  '.join(single_letter(truth[i]) for i in range(len(truth))) + \
+            '  ║  ' + ' ' * (l // 2) + single_letter(result) + \
+            ' ' * (l // 2 - (1 - l % 2)) + '  ║')
+
+    def print_footer():
+        print('╚══' + '══╩══'.join('═' for i in range(o)) + '══╩══' + '═' * l + "══╝")
+
+    def single_letter(b):
+        return '\033[94mT\033[0m' if b else '\033[91mF\033[0m'
+
+    print_header()
+    for truth in opts(o):
+        print_row(truth, statement(truth))
+    print_footer()
