@@ -244,11 +244,18 @@ def run():
     print("Welcome to Propositional Calculator v0.0.2a!")
     while True:
         raw = input()
-        if raw == 'rgen':
-            print(rgen())
-        if raw == 'rtable':
+        inputs = raw.split(' ')
+        if inputs[0] == 'rgen':
+            if len(inputs) == 1:
+                print(rgen())
+            else:
+                if len(inputs) == 2:
+                    print("Error: Improper length of inputs")
+                else:
+                    print(rgen(int(inputs[1]), int(inputs[2])))
+        elif inputs[0] == 'rtable':
             rtable()
-        if raw == 'quit' or raw == 'exit':
+        elif inputs[0] == 'quit' or inp1uts[0] == 'exit':
             quit()
 
 run()
