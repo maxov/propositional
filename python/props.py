@@ -216,7 +216,11 @@ def generate_table(statement, ord = -1):
         print(bold('Error: ') + "Order is too small or too large (Max size: 26).")
 
 def check_equivalency(s1, s2):
-    table1, table2 = generate_table(1), generate_table(2)
+    s1, s2 = read(s1), read(s2)
+    ord = max(s1.ord, s2.ord) + 1
+    table1, table2 = generate_table(s1, ord), generate_table(s2, ord)
+    assert len(table1) == len(table2) and len(table1[0]) == len(table2[0])
+    return all([table1[i][len(table1[0])-1] == table2[i][len(table1[0])-1] for i in range(1, len(table1))])
 
 def print_table(statement):
     statement = read(statement)
@@ -278,6 +282,7 @@ def help():
     print("\t" + bold('rgen') + "\t\tGenerates a random propositional statement.")
     print("\t" + bold('rtable') + "\t\tGenerates a truth table for a random propositional statement.")
     print("\t" + bold('table') + "\t\tGenerates a truth table for a propositional statement. Format: 'table <statement>'")
+    print("\t" + bold('equals?') + "\t\tChecks if two statements are equal. Format: 'equals? <statement1>, <statement2>'")
     print("\t" + bold('settings') + "\tPulls up a menu to edit the program settings.")
     print("\t" + bold('quit, exit') + "\tTerminates the program.")
     print("\n")
@@ -329,6 +334,15 @@ def run():
             else:
                 try:
                     print_table(raw[6:])
+                except (SyntaxError, ValueError, NameError, AttributeError):
+                    print(red('Error: ' ) + 'Improperly formatted inputs.\n')
+        elif raw[0:7] == 'equals?':
+            if len(raw) <= 8:
+                print(red('Error: ' ) + 'Need to provide propositional statement.\n')
+            else:
+                try:
+                    statements = raw[8:].split(", ")
+                    print("\n" + str(check_equivalency(statements[0], statements[1])) + "\n")
                 except (SyntaxError, ValueError, NameError, AttributeError):
                     print(red('Error: ' ) + 'Improperly formatted inputs.\n')
         else:
