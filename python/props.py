@@ -200,7 +200,7 @@ def replaceStr(string):
                  '^': chars['AND'], 'v': chars['OR'], '!': chars['NOT']}
     return "".join(s if s not in old_chars else old_chars[s] for s in string)
 
-def generate_table(statement, ord = 8):
+def generate_table(statement, ord = -1):
     if ord == -1:
         ord = statement.ord + 1
     
