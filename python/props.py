@@ -1,8 +1,7 @@
 """
 To do list:
-1. Create a class of Propositional Statements that can be evaluated and generated and edited.
-2. Create a multiple choice propositional statement generator that tests one's knowledge of these statements.
-3. Port over system to React Native
+1. Create a multiple choice propositional statement generator that tests one's knowledge of these statements.
+2. Port over system to React Native
 """
 
 import string, random
@@ -187,8 +186,8 @@ def read(propositional):
 
 def replaceStr(string):
     assert type(string) is str
-    old_chars = {'|': chars['OR'], '~': chars['NOT'], '&': chars['AND'], \
-                 'v': chars['OR'], '^': chars['NOT']}
+    old_chars = {'&': chars['AND'], '|': chars['OR'], '~': chars['NOT'], \
+                 '^': chars['AND'], 'v': chars['OR'], '!': chars['NOT']}
     return "".join(s if s not in old_chars else old_chars[s] for s in string)
 
 def table(statement):
@@ -240,3 +239,16 @@ def rgen(n = 3, depth = 0):
 
 def rtable(n = 3, depth = 0):
     return table(rgen(n, depth))
+
+def run():
+    print("Welcome to Propositional Calculator v0.0.2a!")
+    while True:
+        raw = input()
+        if raw == 'rgen':
+            print(rgen())
+        if raw == 'rtable':
+            rtable()
+        if raw == 'quit' or raw == 'exit':
+            quit()
+
+run()
