@@ -247,8 +247,45 @@ def help():
     print("\t\033[1mrgen\033[0m\t\tGenerates a random propositional statement.")
     print("\t\033[1mrtable\033[0m\t\tGenerates a truth table for a random propositional statement.")
     print("\t\033[1mtable\033[0m\t\tGenerates a truth table for a propositional statement. Format: 'table <statement>'")
+    print("\t\033[1msettings\033[0m\tPulls up a menu to edit the program settings.")
     print("\t\033[1mexit, quit\033[0m\tTerminates the program.")
     print("\n")
+
+def settings():
+    global default_n, default_depth
+    print("\nWelcome to the settings panel! Here you may edit the program settings." + \
+          "Program settings are wiped at the start of every session; in other words, " + \
+          "they \033[1mreset when you exit the program\033[0m. We haven't yet created an option of saving " + \
+          "your settings just yet; they'll be included in the next release!")
+    print("\nBelow is a list of parameters and their current values. To change each value, simply type the name of the " + \
+          "parameter and your preferred value.")
+    print("\t\033[1mn\033[0m\t\t" + str(default_n) + "\t\tSets the number of random variables used.")
+    print("\t\033[1mdepth\033[0m\t\t"  + str(default_depth) + "\t\tSets the maximumsize of the randomly generated statements.")
+    print("\nTo leave this panel, please type either \033[1mexit\033[0m or \033[1mquit\033[0m.\n")
+    while True:
+        raw = input("\033[1mSettings: > \033[0m")
+        if raw == 'exit' or raw == 'quit':
+            print("\n")
+            return
+        inputs = raw.split(' ')
+        if len(inputs) != 2:
+            print('\033[91mError:\033[0m wrong number of inputs.\n')
+        elif inputs[0] == 'n':
+            try:
+                assert int(inputs[1]) <= 26 and int(inputs[1]) > 0
+                default_n = int(inputs[1])
+                print('\nSuccess: n set to ' + str(default_n) + "\n")
+            except (AssertionError, ValueError):
+                print('\n\033[91mError:\033[0m value must be set to integer between 1 and 26\n')
+        elif inputs[0] == 'depth':
+            try:
+                assert int(inputs[1]) <= 5 and int(inputs[1]) > 0
+                defaut_depth = int(inputs[1])
+                print('\nSuccess: depth set to ' + str(default_depth) + "\n")
+            except (AssertionError, ValueError):
+                print('\n\033[91mError:\033[0m value must be set to integer between 1 and 5\n')
+        else:
+            print("\033[91mError:\033[0m Cannot read input")
 
 def run():
     print(chr(27) + "[2J")
@@ -257,12 +294,12 @@ def run():
         raw = input("\033[1m> \033[0m")
         if raw[0:5] == 'table':
             if len(raw) <= 6:
-                print("Error: Need to provide propositional statement.")
+                print("\033[91mError:\033[0m Need to provide propositional statement.\n")
             else:
                 try:
                     table(raw[6:])
                 except (SyntaxError, ValueError, NameError, AttributeError):
-                    print("Error: Improperly formatted inputs")
+                    print("\033[91mError:\033[0m Improperly formatted inputs.\n")
         else:
             inputs = raw.split(' ')
             if inputs[0] == 'rgen':
@@ -270,7 +307,7 @@ def run():
                     print(rgen())
                 else:
                     if len(inputs) == 2:
-                        print("Error: Improper length of inputs")
+                        print("\033[91mError:\033[0m Improper length of inputs.\n")
                     else:
                         print(rgen(int(inputs[1]), int(inputs[2])))
             elif inputs[0] == 'rtable':
@@ -279,7 +316,9 @@ def run():
                 quit()
             elif inputs[0] == 'help':
                 help()
+            elif inputs[0] == 'settings':
+                settings()
             else:
-                print("Error: Cannot read input")
+                print("\033[91mError:\033[0m Cannot read input.\n")
 
 run()
