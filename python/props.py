@@ -6,7 +6,7 @@ To do list:
 """
 
 import string, random
-chars = {'ALL': '∀', 'EXISTS': '∃', 'EQUIVALENT': '≡', 'AND': '∧', 'OR': '∨', 'NOT': '¬'}
+chars = {'ALL': '∀', 'EXISTS': '∃', 'EQUALS': '≡', 'AND': '∧', 'OR': '∨', 'NOT': '¬'}
 
 def opts(n):
     if n == 0:
@@ -31,7 +31,7 @@ class Prop:
         return Not(self)
 
     def __eq__(self, that):
-         return all([self(truth) == that(truth) for truth in opts(max(self.ord, that.ord) + 1)])
+        return all([self(truth) == that(truth) for truth in opts(max(self.ord, that.ord) + 1)])
 
     def table(self):
         o, s = self.ord + 1, str(self)
@@ -99,6 +99,15 @@ class UnaryOp(Prop):
     def ord(self):
         return self.arg.ord
 
+class Not(UnaryOp):
+    symbol = chars['NOT']
+
+    def __invert__(self):
+        return self.arg
+
+    def __call__(self, values):
+        return not self.arg(values)
+
 class BinaryOp(Prop):
     def __init__(self, left, right):
         self.left = left
@@ -110,6 +119,18 @@ class BinaryOp(Prop):
     @property
     def ord(self):
         return max(self.left.ord, self.right.ord)
+
+class Or(BinaryOp):
+    symbol = chars['OR']
+
+    def __call__(self, values):
+        return self.left(values) or self.right(values)
+
+class And(BinaryOp):
+    symbol = chars['AND']
+
+    def __call__(self, values):
+        return self.left(values) and self.right(values)
 
 class Quantifier(Prop):
     char = ""
@@ -125,27 +146,6 @@ class All(Quantifier):
 
 class Exists(Quantifier):
     char = chars['EXISTS']
-
-class Or(BinaryOp):
-    symbol = chars['OR']
-
-    def __call__(self, values):
-        return self.left(values) or self.right(values)
-
-class And(BinaryOp):
-    symbol = chars['AND']
-
-    def __call__(self, values):
-        return self.left(values) and self.right(values)
-
-class Not(UnaryOp):
-    symbol = chars['NOT']
-
-    def __invert__(self):
-        return self.arg
-
-    def __call__(self, values):
-        return not self.arg(values)
 
 def variables(n):
     return [PropositionalVariable(c) for c in string.ascii_uppercase[:n]]
@@ -196,11 +196,11 @@ def rgen(n = 3, depth = 0):
     if depth < 3 and random.random() > (depth/3)/5:
         x, depth = random.random(), depth + 1
         if x < 1/3:
-            return ~rgen(n, depth)
+            return Not(rgen(n, depth))
         elif x < 2/3:
-            return rgen(n, depth) & rgen(n, depth)
+            return And(rgen(n, depth), rgen(n, depth))
         else:
-            return rgen(n, depth) | rgen(n, depth)
+            return Or(rgen(n, depth), rgen(n, depth))
     else:
         return random.choice(VS[:n])
 
@@ -211,22 +211,27 @@ F = Const(False)
 
 #Takes in a propositional logic statement string and parses it
 def tokenize(props_str):
-    if props_str[0] != '(':
-        if props_str[0] == chars['NOT']:
-            return not tokenize(props_str[1:])
-        return eval(props_str[0])
-    else:
-        num_parens, loc, foundMedian = 0, 0, False
-        while loc < len(props_str)-1 and not foundMedian:
-            loc += 1
-            if props_str[loc] == '(':
-                num_parens += 1
-            elif props_str[loc] == ')':
-                num_parens -= 1
-            elif (props_str[loc] == chars['AND'] or props_str[loc] == chars['OR']) and num_parens == 0:
-                foundMedian, median = True, props_str[loc]
-                first, last = props_str[1:loc-1], props_str[loc+2:len(props_str)-1]
-                print(first + " " + median + " " + last)
-                tokenize(first)
-                tokenize(last)
+    def helper(props_str):
+        if props_str[0] != '(':
+            if props_str[0] == chars['NOT']:
+                return Not(helper(props_str[1:]))
+            return eval(props_str[0])
+        else:
+            num_parens, loc, foundMedian = 0, 0, False
+            while loc < len(props_str)-1 and not foundMedian:
+                loc += 1
+                if props_str[loc] == '(':
+                    num_parens += 1
+                elif props_str[loc] == ')':
+                    num_parens -= 1
+                elif (props_str[loc] == chars['AND'] or props_str[loc] == chars['OR']) and num_parens == 0:
+                    foundMedian, median = True, props_str[loc]
+                    first, last = props_str[1:loc-1], props_str[loc+2:len(props_str)-1]
+                    return And(helper(first), helper(last)) if median == chars['AND'] \
+                    else Or(helper(first), helper(last))
+    return helper(replaceStr(props_str))
+
+def replaceStr(str):
+    old_chars = {'|': chars['OR'], '~': chars['NOT'], '&': chars['AND']}
+    return "".join(s if s not in old_chars else old_chars[s] for s in str)
 
