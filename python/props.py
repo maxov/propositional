@@ -136,7 +136,7 @@ VS, TRANSFORMS = variables(26), []
 def always_T(obj):
     return True
 
-def transform(condition=always_T):
+def transform(condition = always_T):
     def inner(fn):
         TRANSFORMS.append((condition, fn))
         return fn
@@ -172,7 +172,7 @@ def read(propositional):
             return eval(string[0])
         else:
             parens, loc, found = 0, 0, False
-            while loc < len(string)-1 and not found:
+            while loc < len(string) - 1 and not found:
                 loc += 1
                 if string[loc] == '(':
                     parens += 1
@@ -223,23 +223,31 @@ Random generator function that takes in two ints: n and depth
 n corresponds to number of random variables used in statement
 depth corresponds to the maximum allocated depth of statement
 '''
-def rgen(n = default_n, depth = default_depth):
+def rgen(vars):
     def helper(n, depth):
         vs = variables(n)
         if depth < 3 and random.random() > (depth/default_n)/5:
-            x, depth = random.random(), depth + 1
-            if x < 1/3:
-                return Not(helper(n, depth))
-            elif x < 2/3:
-                return And(helper(n, depth), helper(n, depth))
-            else:
-                return Or(helper(n, depth), helper(n, depth))
+            x, depth = int(random.random()*3), depth + 1
+            return {
+                0: Not(helper(n, depth)),
+                1: And(helper(n, depth), helper(n, depth)),
+                2: Or(helper(n, depth), helper(n, depth))
+            }[x]
         else:
             return random.choice(VS[:n])
-    return helper(n, depth).__repr__()
+    try:
+        assert len(vars) <= 2
+        if not len(vars):
+            return helper(default_n, default_depth).__repr__()
+        elif len(vars) == 1:
+            return helper(int(vars[0]), default_depth).__repr__()
+        else:
+            return helper(int(vars[0]), int(vars[1])).__repr__()
+    except (AssertionError, ValueError):
+        print("\033[91mError:\033[0m wrong number of inputs.\n")
 
 def rtable(n = default_n, depth = default_depth):
-    return table(rgen(n, depth))
+    return table(rgen([n, depth]))
 
 def help():
     print("\nList of commands:\n")
@@ -272,20 +280,20 @@ def settings():
             print('\033[91mError:\033[0m wrong number of inputs.\n')
         elif inputs[0] == 'n':
             try:
-                assert int(inputs[1]) <= 26 and int(inputs[1]) > 0
+                assert int(inputs[1]) <= len(VS) and int(inputs[1]) > 0
                 default_n = int(inputs[1])
                 print('\nSuccess: n set to ' + str(default_n) + "\n")
             except (AssertionError, ValueError):
-                print('\n\033[91mError:\033[0m value must be set to integer between 1 and 26\n')
+                print('\n\033[91mError:\033[0m value must be set to integer between 1 and 26.\n')
         elif inputs[0] == 'depth':
             try:
                 assert int(inputs[1]) <= 5 and int(inputs[1]) > 0
                 defaut_depth = int(inputs[1])
                 print('\nSuccess: depth set to ' + str(default_depth) + "\n")
             except (AssertionError, ValueError):
-                print('\n\033[91mError:\033[0m value must be set to integer between 1 and 5\n')
+                print('\n\033[91mError:\033[0m value must be set to integer between 1 and 5.\n')
         else:
-            print("\033[91mError:\033[0m Cannot read input")
+            print("\033[91mError:\033[0m Cannot read input variable.")
 
 def run():
     print(chr(27) + "[2J")
@@ -304,12 +312,9 @@ def run():
             inputs = raw.split(' ')
             if inputs[0] == 'rgen':
                 if len(inputs) == 1:
-                    print(rgen())
+                    print(rgen([]))
                 else:
-                    if len(inputs) == 2:
-                        print("\033[91mError:\033[0m Improper length of inputs.\n")
-                    else:
-                        print(rgen(int(inputs[1]), int(inputs[2])))
+                    print(rgen(inputs[1:]))
             elif inputs[0] == 'rtable':
                 rtable()
             elif inputs[0] == 'quit' or inputs[0] == 'exit':
