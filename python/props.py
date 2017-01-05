@@ -20,6 +20,15 @@ def opts(n):
 def char(i):
     return chr(ord('A') + i)
 
+def bold(str):
+    return '\033[1m{}\033[0m'.format(str)
+
+def red(str):
+    return '\033[91m{}\033[0m'.format(str)
+
+def green(str):
+    return '\033[94m{}\033[0m'.format(str)
+
 class Prop:
     def __or__(self, that):
         return Or(self, that)
@@ -191,42 +200,46 @@ def replaceStr(string):
                  '^': chars['AND'], 'v': chars['OR'], '!': chars['NOT']}
     return "".join(s if s not in old_chars else old_chars[s] for s in string)
 
-def generate_table(statement):
+def generate_table(statement, ord = 8):
+    if ord == -1:
+        ord = statement.ord + 1
     
-    def calc(b):
-        return '\033[94mT\033[0m' if b else '\033[91mF\033[0m'
+    try:
+        assert ord > statement.ord
 
-    return [[char(i) for i in range(statement.ord + 1)] + [str(statement)]] + \
-    [[calc(truth[i]) for i in range(len(truth))] + [calc(statement(truth))] for truth in opts(statement.ord + 1)]
+        def calc(b):
+            return green('T') if b else red('F')
 
-def table(statement):
+        return [[char(i) for i in range(ord)] + [str(statement)]] + \
+        [[calc(truth[i]) for i in range(len(truth))] + [calc(statement(truth))] for truth in opts(ord)]
+    except AssertionError:
+        print(bold('Error: ') + "Order is too small or too large (Max size: 26).")
+
+def check_equivalency(s1, s2):
+    table1, table2 = generate_table(1), generate_table(2)
+
+def print_table(statement):
     statement = read(statement)
-    o, s = statement.ord + 1, str(statement)
-    l = len(str(statement))
+    table, l = generate_table(statement), len(str(statement))
+    o = len(table[0]) - 1
 
     def print_header():
-        print('\n\033[1mPropositional Statement:\033[0m ' + s + "\n")
+        print(bold('Propositional Statement: ') + table[0][o] + "\n")
         print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦══' + '═' * l + "══╗")
-        print('║  ' + '  ║  '.join(char(i) for i in range(o)) + '  ║  ' + s + '  ║')
+        print('║  ' + '  ║  '.join(table[0][:o]) + '  ║  ' + table[0][o] + '  ║')
         print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '═' * l + "══╣")
 
-    def print_row(truth, result):
-        print('║  ' + '  ║  '.join(calc(truth[i]) for i in range(len(truth))) + \
-            '  ║  ' + ' ' * (l // 2) + calc(result) + \
+    def print_row(t):
+        print('║  ' + '  ║  '.join(t[:o]) + \
+            '  ║  ' + ' ' * (l // 2) + t[o] + \
             ' ' * (l // 2 - (1 - l % 2)) + '  ║')
-        return calc(result)
 
     def print_footer():
         print('╚══' + '══╩══'.join('═' for i in range(o)) + '══╩══' + '═' * l + "══╝\n")
 
-    def calc(b):
-        return '\033[94mT\033[0m' if b else '\033[91mF\033[0m'
-
     print_header()
-    results = [print_row(truth, statement(truth)) for truth in opts(o)]
+    [print_row(t) for t in table[1:]]
     print_footer()
-
-    return results
 
 '''
 Random generator function that takes in two ints: n and depth
@@ -254,70 +267,70 @@ def rgen(vars):
         else:
             return helper(int(vars[0]), int(vars[1])).__repr__()
     except (AssertionError, ValueError):
-        print("\033[91mError:\033[0m wrong number of inputs.\n")
+        print(red("Error:") + " wrong number of inputs.\n")
 
 def rtable(n = default_n, depth = default_depth):
-    return table(rgen([n, depth]))
+    return print_table(rgen([n, depth]))
 
 def help():
     print("\nList of commands:\n")
-    print("\t\033[1mhelp\033[0m\t\tPulls up this list of information.")
-    print("\t\033[1mrgen\033[0m\t\tGenerates a random propositional statement.")
-    print("\t\033[1mrtable\033[0m\t\tGenerates a truth table for a random propositional statement.")
-    print("\t\033[1mtable\033[0m\t\tGenerates a truth table for a propositional statement. Format: 'table <statement>'")
-    print("\t\033[1msettings\033[0m\tPulls up a menu to edit the program settings.")
-    print("\t\033[1mexit, quit\033[0m\tTerminates the program.")
+    print("\t" + bold('help') + "\t\tPulls up this list of information.")
+    print("\t" + bold('rgen') + "\t\tGenerates a random propositional statement.")
+    print("\t" + bold('rtable') + "\t\tGenerates a truth table for a random propositional statement.")
+    print("\t" + bold('table') + "\t\tGenerates a truth table for a propositional statement. Format: 'table <statement>'")
+    print("\t" + bold('settings') + "\tPulls up a menu to edit the program settings.")
+    print("\t" + bold('quit, exit') + "\tTerminates the program.")
     print("\n")
 
 def settings():
     global default_n, default_depth
     print("\nWelcome to the settings panel! Here you may edit the program settings." + \
           "Program settings are wiped at the start of every session; in other words, " + \
-          "they \033[1mreset when you exit the program\033[0m. We haven't yet created an option of saving " + \
+          "they " + bold("reset when you exit the program") + ". We haven't yet created an option of saving " + \
           "your settings just yet; they'll be included in the next release!")
     print("\nBelow is a list of parameters and their current values. To change each value, simply type the name of the " + \
           "parameter and your preferred value.")
-    print("\t\033[1mn\033[0m\t\t" + str(default_n) + "\t\tSets the number of random variables used.")
-    print("\t\033[1mdepth\033[0m\t\t"  + str(default_depth) + "\t\tSets the maximumsize of the randomly generated statements.")
-    print("\nTo leave this panel, please type either \033[1mexit\033[0m or \033[1mquit\033[0m.\n")
+    print("\t" + bold('n') + "\t\t" + str(default_n) + "\t\tSets the number of random variables used.")
+    print("\t" + bold('depth') + "\t\t"  + str(default_depth) + "\t\tSets the maximumsize of the randomly generated statements.")
+    print("\nTo leave this panel, please type either " + bold('exit') + " or " + bold('quit') + '.\n')
     while True:
-        raw = input("\033[1mSettings: > \033[0m")
+        raw = input(bold('Settings: > '))
         if raw == 'exit' or raw == 'quit':
             print("\n")
             return
         inputs = raw.split(' ')
         if len(inputs) != 2:
-            print('\033[91mError:\033[0m wrong number of inputs.\n')
+            print(red('Error: ' ) + 'wrong number of inputs.\n')
         elif inputs[0] == 'n':
             try:
                 assert int(inputs[1]) <= len(VS) and int(inputs[1]) > 0
                 default_n = int(inputs[1])
                 print('\nSuccess: n set to ' + str(default_n) + "\n")
             except (AssertionError, ValueError):
-                print('\n\033[91mError:\033[0m value must be set to integer between 1 and 26.\n')
+                print(red('Error: ' ) + 'value must be set to integer between 1 and 26.\n')
         elif inputs[0] == 'depth':
             try:
                 assert int(inputs[1]) <= 5 and int(inputs[1]) > 0
                 defaut_depth = int(inputs[1])
                 print('\nSuccess: depth set to ' + str(default_depth) + "\n")
             except (AssertionError, ValueError):
-                print('\n\033[91mError:\033[0m value must be set to integer between 1 and 5.\n')
+                print(red('Error: ' ) + 'value must be set to integer between 1 and 5.\n')
         else:
-            print("\033[91mError:\033[0m Cannot read input variable.")
+            print(red('Error: ' ) + 'Cannot read input variable.')
 
 def run():
     print(chr(27) + "[2J")
-    print("\nWelcome to Propositional Calculator v0.0.2a! Type \033[1mhelp\033[0m for a guide to using this program.\n")
+    print("\nWelcome to Propositional Calculator v0.0.2a! Type " + bold('help') + " for a guide to using this program.\n")
     while True:
-        raw = input("\033[1m> \033[0m")
+        raw = input(bold('> '))
         if raw[0:5] == 'table':
             if len(raw) <= 6:
-                print("\033[91mError:\033[0m Need to provide propositional statement.\n")
+                print(red('Error: ' ) + 'Need to provide propositional statement.\n')
             else:
                 try:
-                    table(raw[6:])
+                    print_table(raw[6:])
                 except (SyntaxError, ValueError, NameError, AttributeError):
-                    print("\033[91mError:\033[0m Improperly formatted inputs.\n")
+                    print(red('Error: ' ) + 'Improperly formatted inputs.\n')
         else:
             inputs = raw.split(' ')
             if inputs[0] == 'rgen':
@@ -334,6 +347,6 @@ def run():
             elif inputs[0] == 'settings':
                 settings()
             else:
-                print("\033[91mError:\033[0m Cannot read input.\n")
+                print(red('Error: ' ) + 'Cannot read input.\n')
 
 run()
