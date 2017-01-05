@@ -6,6 +6,7 @@ To do list:
 
 import string, random
 chars = {'ALL': '∀', 'EXISTS': '∃', 'EQUALS': '≡', 'AND': '∧', 'OR': '∨', 'NOT': '¬'}
+default_n, default_depth = 3, 0
 
 def opts(n):
     if n == 0:
@@ -222,10 +223,10 @@ Random generator function that takes in two ints: n and depth
 n corresponds to number of random variables used in statement
 depth corresponds to the maximum allocated depth of statement
 '''
-def rgen(n = 3, depth = 0):
+def rgen(n = default_n, depth = default_depth):
     def helper(n, depth):
         vs = variables(n)
-        if depth < 3 and random.random() > (depth/3)/5:
+        if depth < 3 and random.random() > (depth/default_n)/5:
             x, depth = random.random(), depth + 1
             if x < 1/3:
                 return Not(helper(n, depth))
@@ -237,18 +238,31 @@ def rgen(n = 3, depth = 0):
             return random.choice(VS[:n])
     return helper(n, depth).__repr__()
 
-def rtable(n = 3, depth = 0):
+def rtable(n = default_n, depth = default_depth):
     return table(rgen(n, depth))
 
+def help():
+    print("\nList of commands:\n")
+    print("\t\033[1mhelp\033[0m\t\tPulls up this list of information.")
+    print("\t\033[1mrgen\033[0m\t\tGenerates a random propositional statement.")
+    print("\t\033[1mrtable\033[0m\t\tGenerates a truth table for a random propositional statement.")
+    print("\t\033[1mtable\033[0m\t\tGenerates a truth table for a propositional statement. Format: 'table <statement>'")
+    print("\t\033[1mexit, quit\033[0m\tTerminates the program.")
+    print("\n")
+
 def run():
-    print("Welcome to Propositional Calculator v0.0.2a!")
+    print(chr(27) + "[2J")
+    print("\nWelcome to Propositional Calculator v0.0.2a! Type \033[1mhelp\033[0m for a guide to using this program.\n")
     while True:
-        raw = input()
+        raw = input("\033[1m> \033[0m")
         if raw[0:5] == 'table':
             if len(raw) <= 6:
                 print("Error: Need to provide propositional statement.")
             else:
-                table(raw[6:])
+                try:
+                    table(raw[6:])
+                except (SyntaxError, ValueError, NameError, AttributeError):
+                    print("Error: Improperly formatted inputs")
         else:
             inputs = raw.split(' ')
             if inputs[0] == 'rgen':
@@ -263,6 +277,8 @@ def run():
                 rtable()
             elif inputs[0] == 'quit' or inputs[0] == 'exit':
                 quit()
+            elif inputs[0] == 'help':
+                help()
             else:
                 print("Error: Cannot read input")
 
