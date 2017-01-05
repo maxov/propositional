@@ -191,6 +191,14 @@ def replaceStr(string):
                  '^': chars['AND'], 'v': chars['OR'], '!': chars['NOT']}
     return "".join(s if s not in old_chars else old_chars[s] for s in string)
 
+def generate_table(statement):
+    
+    def calc(b):
+        return '\033[94mT\033[0m' if b else '\033[91mF\033[0m'
+
+    return [[char(i) for i in range(statement.ord + 1)] + [str(statement)]] + \
+    [[calc(truth[i]) for i in range(len(truth))] + [calc(statement(truth))] for truth in opts(statement.ord + 1)]
+
 def table(statement):
     statement = read(statement)
     o, s = statement.ord + 1, str(statement)
@@ -206,6 +214,7 @@ def table(statement):
         print('║  ' + '  ║  '.join(calc(truth[i]) for i in range(len(truth))) + \
             '  ║  ' + ' ' * (l // 2) + calc(result) + \
             ' ' * (l // 2 - (1 - l % 2)) + '  ║')
+        return calc(result)
 
     def print_footer():
         print('╚══' + '══╩══'.join('═' for i in range(o)) + '══╩══' + '═' * l + "══╝\n")
@@ -214,9 +223,10 @@ def table(statement):
         return '\033[94mT\033[0m' if b else '\033[91mF\033[0m'
 
     print_header()
-    for truth in opts(o):
-        print_row(truth, statement(truth))
+    results = [print_row(truth, statement(truth)) for truth in opts(o)]
     print_footer()
+
+    return results
 
 '''
 Random generator function that takes in two ints: n and depth
