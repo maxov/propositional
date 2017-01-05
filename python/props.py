@@ -160,6 +160,64 @@ def de_morgan_and(x):
 def implies(a, b):
     return ~a | b
 
+A, B, C, D, E = VS[:5]
+T, F = Const(True), Const(False)
+
+#Reads in a propositional logic statement string and converts it to an object
+def read(propositional):
+    def helper(string):
+        if string[0] != '(':
+            if string[0] == chars['NOT']:
+                return Not(helper(string[1:]))
+            return eval(string[0])
+        else:
+            parens, loc, found = 0, 0, False
+            while loc < len(string)-1 and not found:
+                loc += 1
+                if string[loc] == '(':
+                    parens += 1
+                elif string[loc] == ')':
+                    parens -= 1
+                elif (string[loc] == chars['AND'] or string[loc] == chars['OR']) and not parens:
+                    found, median = True, string[loc]
+                    first, last = string[1:loc-1], string[loc+2:len(string)-1]
+                    return And(helper(first), helper(last)) if median == chars['AND'] \
+                    else Or(helper(first), helper(last))
+    return helper(replaceStr(propositional))
+
+def replaceStr(string):
+    assert type(string) is str
+    old_chars = {'|': chars['OR'], '~': chars['NOT'], '&': chars['AND'], \
+                 'v': chars['OR'], '^': chars['NOT']}
+    return "".join(s if s not in old_chars else old_chars[s] for s in string)
+
+def table(statement):
+    statement = read(statement)
+    o, s = statement.ord + 1, str(statement)
+    l = len(str(statement))
+
+    def print_header():
+        print('\n\033[1mPropositional Statement:\033[0m ' + s + "\n")
+        print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦══' + '═' * l + "══╗")
+        print('║  ' + '  ║  '.join(char(i) for i in range(o)) + '  ║  ' + s + '  ║')
+        print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '═' * l + "══╣")
+
+    def print_row(truth, result):
+        print('║  ' + '  ║  '.join(calc(truth[i]) for i in range(len(truth))) + \
+            '  ║  ' + ' ' * (l // 2) + calc(result) + \
+            ' ' * (l // 2 - (1 - l % 2)) + '  ║')
+
+    def print_footer():
+        print('╚══' + '══╩══'.join('═' for i in range(o)) + '══╩══' + '═' * l + "══╝\n")
+
+    def calc(b):
+        return '\033[94mT\033[0m' if b else '\033[91mF\033[0m'
+
+    print_header()
+    for truth in opts(o):
+        print_row(truth, statement(truth))
+    print_footer()
+
 '''
 Random generator function that takes in two ints: n and depth
 n corresponds to number of random variables used in statement
@@ -180,60 +238,5 @@ def rgen(n = 3, depth = 0):
             return random.choice(VS[:n])
     return helper(n, depth).__repr__()
 
-A, B, C, D, E = VS[:5]
-
-T = Const(True)
-F = Const(False)
-
-#Takes in a propositional logic statement string and parses it
-def tokenize(props_str):
-    def helper(props_str):
-        if props_str[0] != '(':
-            if props_str[0] == chars['NOT']:
-                return Not(helper(props_str[1:]))
-            return eval(props_str[0])
-        else:
-            num_parens, loc, found = 0, 0, False
-            while loc < len(props_str)-1 and not found:
-                loc += 1
-                if props_str[loc] == '(':
-                    num_parens += 1
-                elif props_str[loc] == ')':
-                    num_parens -= 1
-                elif (props_str[loc] == chars['AND'] or props_str[loc] == chars['OR']) and not num_parens:
-                    found, median = True, props_str[loc]
-                    first, last = props_str[1:loc-1], props_str[loc+2:len(props_str)-1]
-                    return And(helper(first), helper(last)) if median == chars['AND'] \
-                    else Or(helper(first), helper(last))
-    return helper(replaceStr(props_str))
-
-def replaceStr(str):
-    old_chars = {'|': chars['OR'], '~': chars['NOT'], '&': chars['AND']}
-    return "".join(s if s not in old_chars else old_chars[s] for s in str)
-
-def table(statement):
-    statement = tokenize(statement)
-    o, s = statement.ord + 1, str(statement)
-    l = len(str(statement))
-
-    def print_header():
-        print('\n\033[1mPropositional Statement:\033[0m ' + s + "\n")
-        print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦══' + '═' * l + "══╗")
-        print('║  ' + '  ║  '.join(char(i) for i in range(o)) + '  ║  ' + s + '  ║')
-        print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '═' * l + "══╣")
-
-    def print_row(truth, result):
-        print('║  ' + '  ║  '.join(single_letter(truth[i]) for i in range(len(truth))) + \
-            '  ║  ' + ' ' * (l // 2) + single_letter(result) + \
-            ' ' * (l // 2 - (1 - l % 2)) + '  ║')
-
-    def print_footer():
-        print('╚══' + '══╩══'.join('═' for i in range(o)) + '══╩══' + '═' * l + "══╝")
-
-    def single_letter(b):
-        return '\033[94mT\033[0m' if b else '\033[91mF\033[0m'
-
-    print_header()
-    for truth in opts(o):
-        print_row(truth, statement(truth))
-    print_footer()
+def rtable(n = 3, depth = 0):
+    return table(rgen(n, depth))
