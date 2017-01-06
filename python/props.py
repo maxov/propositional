@@ -222,6 +222,24 @@ def check_equivalency(s1, s2):
     assert len(table1) == len(table2) and len(table1[0]) == len(table2[0])
     return all([table1[i][len(table1[0])-1] == table2[i][len(table1[0])-1] for i in range(1, len(table1))])
 
+def simplify(s1):
+    if type(s1) == PropositionalVariable:
+        return s1
+    if type(s1) == Not:
+        if type(s1.arg) == Not:
+            return simplify(s1.arg.arg)
+        if type(s1.arg) == Or and type(s1.arg.left) == Not and type(s1.arg.right) == Not:
+            return And(simplify(s1.arg.left.arg), simplify(s1.arg.right.arg))
+        if type(s1.arg) == And and type(s1.arg.left) == Not and type(s1.arg.right) == Not:
+            return Or(simplify(s1.arg.left.arg), simplify(s1.arg.right.arg))
+        return Not(simplify(s1.arg))
+    if (type(s1) == And or type(s1) == Or) and s1.left == s1.right:
+        return simplify(s1.left)
+    if type(s1) == And:
+        return And(simplify(s1.left), simplify(s1.right))
+    if type(s1) == Or:
+        return Or(simplify(s1.left), simplify(s1.right))
+
 def print_table(statement):
     statement = read(statement)
     table, l = generate_table(statement), len(str(statement))
@@ -265,11 +283,11 @@ def rgen(vars):
     try:
         assert len(vars) <= 2
         if not len(vars):
-            return helper(default_n, default_depth).__repr__()
+            return simplify(helper(default_n, default_depth)).__repr__()
         elif len(vars) == 1:
-            return helper(int(vars[0]), default_depth).__repr__()
+            return simplify(helper(int(vars[0]), default_depth)).__repr__()
         else:
-            return helper(int(vars[0]), int(vars[1])).__repr__()
+            return simplify(helper(int(vars[0]), int(vars[1]))).__repr__()
     except (AssertionError, ValueError):
         print(red("Error:") + " wrong number of inputs.\n")
 
