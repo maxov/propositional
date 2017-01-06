@@ -295,6 +295,17 @@ def rgen(vars):
 def rtable(n = default_n, depth = default_depth):
     return print_table(rgen([n, depth]))
 
+def gen_q(n = default_n, depth = default_depth):
+    s = [rgen(n, depth) for _ in range(4)]
+    answer = int(random.random() * 4)
+    
+    for x in range(4):
+        if x != answer and check_equivalency(s[x], s[answer]):
+            s[x] = rgen(n, depth)
+
+    tables = generate_table(s)
+    return answer, generate_table(s)
+
 def help():
     print("\nList of commands:\n")
     print("\t" + bold('help') + "\t\tPulls up this list of information.")
