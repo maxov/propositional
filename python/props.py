@@ -301,6 +301,7 @@ def help():
     print("\t" + bold('rtable') + "\t\tGenerates a truth table for a random propositional statement.")
     print("\t" + bold('table') + "\t\tGenerates a truth table for a propositional statement. Format: 'table <statement>'")
     print("\t" + bold('equals?') + "\t\tChecks if two statements are equal. Format: 'equals? <statement1>, <statement2>'")
+    print("\t" + bold('simplify') + "\tSimplifies a propositional statement. Format: 'simplify <statement>'")
     print("\t" + bold('settings') + "\tPulls up a menu to edit the program settings.")
     print("\t" + bold('quit, exit') + "\tTerminates the program.")
     print("\n")
@@ -361,6 +362,14 @@ def run():
                 try:
                     statements = raw[8:].split(", ")
                     print("\n" + str(check_equivalency(statements[0], statements[1])) + "\n")
+                except (SyntaxError, ValueError, NameError, AttributeError):
+                    print(red('Error: ' ) + 'Improperly formatted inputs.\n')
+        elif raw[0:8] == 'simplify':
+            if len(raw) <= 9:
+                print(red('Error: ' ) + 'Need to provide propositional statement.\n')
+            else:
+                try:
+                    print("\n" + str(simplify(read(raw[9:]))) + "\n")
                 except (SyntaxError, ValueError, NameError, AttributeError):
                     print(red('Error: ' ) + 'Improperly formatted inputs.\n')
         else:
