@@ -344,7 +344,7 @@ def settings():
 
 def run():
     print(chr(27) + "[2J")
-    print("\nWelcome to Propositional Calculator v0.0.3a! Type " + bold('help') + " for a guide to using this program.\n")
+    print("\nWelcome to Propositional Calculator v0.0.4a! Type " + bold('help') + " for a guide to using this program.\n")
     while True:
         raw = input(bold('> '))
         if raw[0:5] == 'table':
