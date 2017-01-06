@@ -39,6 +39,7 @@ class Prop:
     def __invert__(self):
         return Not(self)
 
+    #Note: This does not work for some reason; currently using my less elegant solution involving tables
     def __eq__(self, that):
         return all([self(truth) == that(truth) for truth in opts(max(self.ord, that.ord) + 1)])
 
@@ -200,25 +201,25 @@ def replaceStr(string):
                  '^': chars['AND'], 'v': chars['OR'], '!': chars['NOT']}
     return "".join(s if s not in old_chars else old_chars[s] for s in string)
 
-def generate_table(statement, ord = -1):
+def generate_table(statements, ord = -1):
     if ord == -1:
-        ord = statement.ord + 1
+        ord = max([s.ord for s in statements]) + 1
     
     try:
-        assert ord > statement.ord
+        assert all([ord > s.ord for s in statements])
 
         def calc(b):
             return green('T') if b else red('F')
 
-        return [[char(i) for i in range(ord)] + [str(statement)]] + \
-        [[calc(truth[i]) for i in range(len(truth))] + [calc(statement(truth))] for truth in opts(ord)]
+        return [[char(i) for i in range(ord)] + [str(s) for s in statements]] + \
+        [[calc(truth[i]) for i in range(len(truth))] + [calc(s(truth)) for s in statements] for truth in opts(ord)]
     except AssertionError:
         print(bold('Error: ') + "Order is too small or too large (Max size: 26).")
 
 def check_equivalency(s1, s2):
     s1, s2 = read(s1), read(s2)
     ord = max(s1.ord, s2.ord) + 1
-    table1, table2 = generate_table(s1, ord), generate_table(s2, ord)
+    table1, table2 = generate_table([s1], ord), generate_table([s2], ord)
     assert len(table1) == len(table2) and len(table1[0]) == len(table2[0])
     return all([table1[i][len(table1[0])-1] == table2[i][len(table1[0])-1] for i in range(1, len(table1))])
 
