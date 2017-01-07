@@ -1,7 +1,10 @@
 """
 To do list:
-1. Create a multiple choice propositional statement generator that tests one's knowledge of these statements.
-2. Port over system to React Native
+1. Create a function to display multiple statements in each table
+2. Create a function that prompts users with questions and receives/checks their inputs
+3. Create question class?
+4. Create a method of keeping track of their progress (Maybe a quiz function that contains item 2) 
+5. Port over system to React Native
 """
 
 import string, random
