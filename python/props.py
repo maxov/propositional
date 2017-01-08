@@ -244,24 +244,23 @@ def simplify(s1):
     if type(s1) == Or:
         return Or(simplify(s1.left), simplify(s1.right))
 
-def print_table(statement):
-    statement = read(statement)
-    table, l = generate_table(statement), len(str(statement))
-    o = len(table[0]) - 1
+def print_table(statements):
+    statements = [read(statement) for statement in statements]
+    table, ls = generate_table(statements), [len(str(statement)) for statement in statements]
+    o = len(table[0]) - len(statements)
 
     def print_header():
         print(bold('Propositional Statement: ') + table[0][o] + "\n")
-        print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦══' + '═' * l + "══╗")
-        print('║  ' + '  ║  '.join(table[0][:o]) + '  ║  ' + table[0][o] + '  ║')
-        print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '═' * l + "══╣")
+        print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦══' + '══╦══'.join('═' * l for l in ls) + "══╗")
+        print('║  ' + '  ║  '.join(table[0][:o]) + '  ║  ' + '  ║  '.join(table[0][i] for i in range(o, len(table[0]))) + '  ║')
+        print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '══╬══'.join('═' * l for l in ls) + "══╣")
 
     def print_row(t):
-        print('║  ' + '  ║  '.join(t[:o]) + \
-            '  ║  ' + ' ' * (l // 2) + t[o] + \
-            ' ' * (l // 2 - (1 - l % 2)) + '  ║')
+        print('║  ' + '  ║  '.join(t[:o]) + '  ║  ' + \
+            '  ║  '.join(' ' * (ls[i - o] // 2) + t[i] + ' ' * (ls[i - o] // 2 - (1 - ls[i - o] % 2)) for i in range(o, len(table[0]))) + '  ║')
 
     def print_footer():
-        print('╚══' + '══╩══'.join('═' for i in range(o)) + '══╩══' + '═' * l + "══╝\n")
+        print('╚══' + '══╩══'.join('═' for i in range(o)) + '══╩══' + '══╩══'.join('═' * l for l in ls) + "══╝\n")
 
     print_header()
     [print_row(t) for t in table[1:]]
@@ -296,10 +295,10 @@ def rgen(vars):
         print(red("Error:") + " wrong number of inputs.\n")
 
 def rtable(n = default_n, depth = default_depth):
-    return print_table(rgen([n, depth]))
+    return print_table([rgen([n, depth])])
 
 def gen_q(n = default_n, depth = default_depth):
-    s = [rgen(n, depth) for _ in range(4)]
+    s = [rgen([n, depth]) for _ in range(4)]
     answer = int(random.random() * 4)
     
     for x in range(4):
