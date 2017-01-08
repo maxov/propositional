@@ -204,21 +204,6 @@ def replaceStr(string):
                  '^': chars['AND'], 'v': chars['OR'], '!': chars['NOT']}
     return "".join(s if s not in old_chars else old_chars[s] for s in string)
 
-def generate_table(statements, ord = -1):
-    if ord == -1:
-        ord = max([s.ord for s in statements]) + 1
-    
-    try:
-        assert all([ord > s.ord for s in statements])
-
-        def calc(b):
-            return green('T') if b else red('F')
-
-        return [[char(i) for i in range(ord)] + [str(s) for s in statements]] + \
-        [[calc(truth[i]) for i in range(len(truth))] + [calc(s(truth)) for s in statements] for truth in opts(ord)]
-    except AssertionError:
-        print(bold('Error: ') + "Order is too small or too large (Max size: 26).")
-
 def check_equivalency(s1, s2):
     s1, s2 = read(s1), read(s2)
     ord = max(s1.ord, s2.ord) + 1
@@ -243,6 +228,21 @@ def simplify(s1):
         return And(simplify(s1.left), simplify(s1.right))
     if type(s1) == Or:
         return Or(simplify(s1.left), simplify(s1.right))
+
+def generate_table(statements, ord = -1):
+    if ord == -1:
+        ord = max([s.ord for s in statements]) + 1
+    
+    try:
+        assert all([ord > s.ord for s in statements])
+
+        def calc(b):
+            return green('T') if b else red('F')
+
+        return [[char(i) for i in range(ord)] + [str(s) for s in statements]] + \
+        [[calc(truth[i]) for i in range(len(truth))] + [calc(s(truth)) for s in statements] for truth in opts(ord)]
+    except AssertionError:
+        print(bold('Error: ') + "Order is too small or too large (Max size: 26).")
 
 def print_table(statements):
     statements = [read(statement) for statement in statements]
@@ -305,8 +305,7 @@ def gen_q(n = default_n, depth = default_depth):
         if x != answer and check_equivalency(s[x], s[answer]):
             s[x] = rgen(n, depth)
 
-    tables = generate_table(s)
-    return answer, generate_table(s)
+    return answer, s
 
 def help():
     print("\nList of commands:\n")
