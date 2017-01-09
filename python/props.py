@@ -244,7 +244,17 @@ def generate_table(statements, ord = -1):
     except AssertionError:
         print(bold('Error: ') + "Order is too small or too large (Max size: 26).")
 
-def print_table(statements):
+def generate_q(n = default_n, depth = default_depth):
+    s = [rgen([n, depth]) for _ in range(4)]
+    answer = int(random.random() * 4)
+    
+    for x in range(4):
+        if x != answer and check_equivalency(s[x], s[answer]):
+            s[x] = rgen(n, depth)
+
+    return answer, s
+
+def print_table(statements, q = False, answer = -1):
     statements = [read(statement) for statement in statements]
     table, ls = generate_table(statements), [len(str(statement)) for statement in statements]
     o = len(table[0]) - len(statements)
@@ -255,6 +265,12 @@ def print_table(statements):
         print('║  ' + '  ║  '.join(table[0][:o]) + '  ║  ' + '  ║  '.join(table[0][i] for i in range(o, len(table[0]))) + '  ║')
         print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '══╬══'.join('═' * l for l in ls) + "══╣")
 
+    def print_qheader():
+        print(bold('Please select the correct truth table for the following statement: ') + statements[q] + "\n")
+        print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦══' + '══╦══'.join('═' for l in ls) + "══╗")
+        print('║  ' + '  ║  '.join(table[0][:o]) + '  ║  ' + '  ║  '.join(['a', 'b', 'c', 'd']) + '  ║')
+        print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '══╬══'.join('═' for l in ls) + "══╣")
+
     def print_row(t):
         print('║  ' + '  ║  '.join(t[:o]) + '  ║  ' + \
             '  ║  '.join(' ' * (ls[i - o] // 2) + t[i] + ' ' * (ls[i - o] // 2 - (1 - ls[i - o] % 2)) for i in range(o, len(table[0]))) + '  ║')
@@ -262,9 +278,22 @@ def print_table(statements):
     def print_footer():
         print('╚══' + '══╩══'.join('═' for i in range(o)) + '══╩══' + '══╩══'.join('═' * l for l in ls) + "══╝\n")
 
-    print_header()
+    print_qheader() if q else print_header()
     [print_row(t) for t in table[1:]]
     print_footer()
+
+def print_question():
+    a, s = generate_q
+    print_table(s, True, a)
+    try:
+        b = input(bold("Answer: > "))
+        assert b in ['a', 'b', 'c', 'd']
+    except AssertionError:
+        print(red("Error: ") + "Cannot read answer. ")
+    if ord(b) - 97 == a:
+        print("Success! Answer is correct.")
+    else:
+        print("Wrong answer. The correct answer is {}".format(a))
 
 '''
 Random generator function that takes in two ints: n and depth
@@ -296,16 +325,6 @@ def rgen(vars):
 
 def rtable(n = default_n, depth = default_depth):
     return print_table([rgen([n, depth])])
-
-def gen_q(n = default_n, depth = default_depth):
-    s = [rgen([n, depth]) for _ in range(4)]
-    answer = int(random.random() * 4)
-    
-    for x in range(4):
-        if x != answer and check_equivalency(s[x], s[answer]):
-            s[x] = rgen(n, depth)
-
-    return answer, s
 
 def help():
     print("\nList of commands:\n")
@@ -356,8 +375,7 @@ def settings():
             print(red('Error: ' ) + 'Cannot read input variable.')
 
 def run():
-    print(chr(27) + "[2J")
-    print("\nWelcome to Propositional Calculator v0.0.4a! Type " + bold('help') + " for a guide to using this program.\n")
+    print(chr(27) + "[2J\nWelcome to Propositional Calculator v0.0.4a! Type " + bold('help') + " for a guide to using this program.\n")
     while True:
         raw = input(bold('> '))
         if raw[0:5] == 'table':
