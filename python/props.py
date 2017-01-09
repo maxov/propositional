@@ -250,13 +250,14 @@ def generate_q(n = default_n, depth = default_depth):
     
     for x in range(4):
         if x != answer and check_equivalency(s[x], s[answer]):
-            s[x] = rgen(n, depth)
+            s[x] = rgen([n, depth])
 
     return answer, s
 
 def print_table(statements, q = False, answer = -1):
     statements = [read(statement) for statement in statements]
-    table, ls = generate_table(statements), [len(str(statement)) for statement in statements]
+    table = generate_table(statements)
+    ls = [len(str(statement)) for statement in statements] if not q else [1, 1, 1, 1]
     o = len(table[0]) - len(statements)
 
     def print_header():
@@ -266,7 +267,7 @@ def print_table(statements, q = False, answer = -1):
         print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '══╬══'.join('═' * l for l in ls) + "══╣")
 
     def print_qheader():
-        print(bold('Please select the correct truth table for the following statement: ') + statements[q] + "\n")
+        print(bold('Please select the correct truth table for the following statement: ') + statements[q].__repr__() + "\n")
         print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦══' + '══╦══'.join('═' for l in ls) + "══╗")
         print('║  ' + '  ║  '.join(table[0][:o]) + '  ║  ' + '  ║  '.join(['a', 'b', 'c', 'd']) + '  ║')
         print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '══╬══'.join('═' for l in ls) + "══╣")
@@ -283,14 +284,14 @@ def print_table(statements, q = False, answer = -1):
     print_footer()
 
 def print_question():
-    a, s = generate_q
+    a, s = generate_q()
     print_table(s, True, a)
     try:
         b = input(bold("Answer: > "))
         assert b in ['a', 'b', 'c', 'd']
     except AssertionError:
         print(red("Error: ") + "Cannot read answer. ")
-    if ord(b) - 97 == a:
+    if ord(b) - 96 == a:
         print("Success! Answer is correct.")
     else:
         print("Wrong answer. The correct answer is {}".format(a))
@@ -418,6 +419,8 @@ def run():
                 help()
             elif inputs[0] == 'settings':
                 settings()
+            elif inputs[0] == 'question':
+                print_question()
             else:
                 print(red('Error: ' ) + 'Cannot read input.\n')
 
