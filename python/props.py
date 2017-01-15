@@ -12,7 +12,7 @@ default = {'n': 3, 'depth': 0}
 
 commands = {
 'help': 'Pulls up this list of information',
-'rgen': 'Generates a random propositional statement',
+'generate': 'Generates a random propositional statement',
 'table' : 'Generates a truth table for a given statement. Format: "table <statement1>, <statement2>, ..., <statementn>"',
 'rtable' : 'Generates a truth table for a random propositional statement',
 'equals' : 'Checks if two statements are equal. Format: "equals? <statement1>, <statement2>"',
@@ -305,7 +305,7 @@ def rgen(args):
 
 #Generates a random propositional statement (for users)
 def generate(args):
-    print(rgen())
+    print(rgen([]))
 
 #Generates a random table (for users)
 def rtable(args):
@@ -325,7 +325,7 @@ def table(args):
     o = len(tbl[0]) - len(statements)
 
     def print_header():
-        print(bold('Propositional Statement: ') + tbl[0][o] + "\n")
+        print(bold('Propositional Statement(s): ') + ", ".join(tbl[0][o:]) + "\n")
         print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦╦══' + '══╦══'.join('═' * l for l in ls) + "══╗")
         print('║  ' + '  ║  '.join(tbl[0][:o]) + '  ║║  ' + '  ║  '.join(tbl[0][i] for i in range(o, len(tbl[0]))) + '  ║')
         print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬╬══' + '══╬══'.join('═' * l for l in ls) + "══╣")
@@ -380,10 +380,11 @@ def help(*args):
     print("\n")
 
 def change_setting(var, req, min, max):
+    global default
     try:
         assert req < max and req > min
         default['var'] = req
-        print('\nSuccess: {} set to {}.\n'.format(var, req))
+        print('\nSuccess: {} set to {}.\n'.format(var, default['var']))
     except (AssertionError, ValueError):
         print(red('Error: ' ) + '{} must be set to integer between {} and {}.\n'.format(var, min, max-1))
 
