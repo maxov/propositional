@@ -7,7 +7,20 @@ To do list:
 
 import string, random
 chars = {'ALL': '∀', 'EXISTS': '∃', 'EQUALS': '≡', 'AND': '∧', 'OR': '∨', 'NOT': '¬'}
-default_n, default_depth = 3, 0
+
+default = {'n': 3, 'depth': 0}
+
+commands = {
+'help': 'Pulls up this list of information',
+'rgen': 'Generates a random propositional statement',
+'table' : 'Generates a truth table for a given statement. Format: "table <statement1>, <statement2>, ..., <statementn>"',
+'rtable' : 'Generates a truth table for a random propositional statement',
+'equals' : 'Checks if two statements are equal. Format: "equals? <statement1>, <statement2>"',
+'simplify' : 'Simplifies a propositional statement. Format: "simplify <statement>"',
+'settings' : 'Pulls up a menu to edit the program settings',
+'quit' : 'Terminates the program',
+'exit' : 'Terminates the program'
+}
 
 def opts(n):
     if n == 0:
@@ -196,12 +209,14 @@ def read(propositional):
                     else Or(helper(first), helper(last))
     return helper(replaceStr(propositional))
 
+#Replaces a set of symbols with characters that the read function can parse
 def replaceStr(string):
     assert type(string) is str
     old_chars = {'&': chars['AND'], '|': chars['OR'], '~': chars['NOT'], \
                  '^': chars['AND'], 'v': chars['OR'], '!': chars['NOT']}
     return "".join(s if s not in old_chars else old_chars[s] for s in string)
 
+#Checks the logical equivalency of two Strings (NOT PropositionalVariable objects)
 def check_equivalency(s1, s2):
     s1, s2 = read(s1), read(s2)
     ord = max(s1.ord, s2.ord) + 1
@@ -209,24 +224,31 @@ def check_equivalency(s1, s2):
     assert len(table1) == len(table2) and len(table1[0]) == len(table2[0])
     return all([table1[i][len(table1[0])-1] == table2[i][len(table1[0])-1] for i in range(1, len(table1))])
 
-def simplify(s1):
+#Takes in a PropositionalVariable object (NOT a string) and simplifies the corresponding statement
+def do_simplify(s1):
     if type(s1) == PropositionalVariable:
         return s1
     if type(s1) == Not:
         if type(s1.arg) == Not:
-            return simplify(s1.arg.arg)
+            return do_simplify(s1.arg.arg)
         if type(s1.arg) == Or and type(s1.arg.left) == Not and type(s1.arg.right) == Not:
-            return And(simplify(s1.arg.left.arg), simplify(s1.arg.right.arg))
+            return And(do_simplify(s1.arg.left.arg), do_simplify(s1.arg.right.arg))
         if type(s1.arg) == And and type(s1.arg.left) == Not and type(s1.arg.right) == Not:
-            return Or(simplify(s1.arg.left.arg), simplify(s1.arg.right.arg))
-        return Not(simplify(s1.arg))
+            return Or(do_simplify(s1.arg.left.arg), do_simplify(s1.arg.right.arg))
+        return Not(do_simplify(s1.arg))
     if (type(s1) == And or type(s1) == Or) and s1.left == s1.right:
-        return simplify(s1.left)
+        return do_simplify(s1.left)
     if type(s1) == And:
-        return And(simplify(s1.left), simplify(s1.right))
+        return And(do_simplify(s1.left), do_simplify(s1.right))
     if type(s1) == Or:
-        return Or(simplify(s1.left), simplify(s1.right))
+        return Or(do_simplify(s1.left), do_simplify(s1.right))
 
+"""
+Generates a table of statements given an array of PropositionalVariable objects (NOT Strings)
+with an optional variable that lists requested order. (Order in this case means how many variables)
+are shown. For example, someone can request, for some reason, a truth table for ~A with the results
+given inputs A, B, C, D, and E by requesting ord = 5.
+"""
 def generate_table(statements, ord = -1):
     if ord == -1:
         ord = max([s.ord for s in statements]) + 1
@@ -242,7 +264,8 @@ def generate_table(statements, ord = -1):
     except AssertionError:
         print(bold('Error: ') + "Order is too small or too large (Max size: 26).")
 
-def generate_q(n = default_n, depth = default_depth):
+#Generates a random question for the question function to parse.
+def generate_q(n = default['n'], depth = default['depth']):
     s = [rgen([n, depth]) for _ in range(4)]
     answer = int(random.random() * 4)
     
@@ -252,57 +275,15 @@ def generate_q(n = default_n, depth = default_depth):
 
     return answer, s
 
-def print_table(statements, q = False, answer = -1):
-    statements = [read(statement) for statement in statements]
-    table = generate_table(statements)
-    ls = [len(str(statement)) for statement in statements] if not q else [1, 1, 1, 1]
-    o = len(table[0]) - len(statements)
-
-    def print_header():
-        print(bold('Propositional Statement: ') + table[0][o] + "\n")
-        print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦══' + '══╦══'.join('═' * l for l in ls) + "══╗")
-        print('║  ' + '  ║  '.join(table[0][:o]) + '  ║  ' + '  ║  '.join(table[0][i] for i in range(o, len(table[0]))) + '  ║')
-        print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '══╬══'.join('═' * l for l in ls) + "══╣")
-
-    def print_qheader():
-        print(bold('Please select the correct truth table for the following statement: ') + statements[q].__repr__() + "\n")
-        print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦══' + '══╦══'.join('═' for l in ls) + "══╗")
-        print('║  ' + '  ║  '.join(table[0][:o]) + '  ║  ' + '  ║  '.join(['a', 'b', 'c', 'd']) + '  ║')
-        print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬══' + '══╬══'.join('═' for l in ls) + "══╣")
-
-    def print_row(t):
-        print('║  ' + '  ║  '.join(t[:o]) + '  ║  ' + \
-            '  ║  '.join(' ' * (ls[i - o] // 2) + t[i] + ' ' * (ls[i - o] // 2 - (1 - ls[i - o] % 2)) for i in range(o, len(table[0]))) + '  ║')
-
-    def print_footer():
-        print('╚══' + '══╩══'.join('═' for i in range(o)) + '══╩══' + '══╩══'.join('═' * l for l in ls) + "══╝\n")
-
-    print_qheader() if q else print_header()
-    [print_row(t) for t in table[1:]]
-    print_footer()
-
-def print_question():
-    a, s = generate_q()
-    print_table(s, True, a)
-    try:
-        b = input(bold("Answer: > "))
-        assert b in ['a', 'b', 'c', 'd']
-    except AssertionError:
-        print(red("Error: ") + "Cannot read answer. ")
-    if ord(b) - 96 == a:
-        print("Success! Answer is correct.")
-    else:
-        print("Wrong answer. The correct answer is {}".format(a))
-
 '''
 Random generator function that takes in two ints: n and depth
 n corresponds to number of random variables used in statement
 depth corresponds to the maximum allocated depth of statement
 '''
-def rgen(vars):
+def rgen(args):
     def helper(n, depth):
         vs = variables(n)
-        if depth < 3 and random.random() > (depth/default_n)/5:
+        if depth < 3 and random.random() > (depth/default['n'])/5:
             x, depth = int(random.random()*3), depth + 1
             return {
                 0: Not(helper(n, depth)),
@@ -312,42 +293,110 @@ def rgen(vars):
         else:
             return random.choice(VS[:n])
     try:
-        assert len(vars) <= 2
-        if not len(vars):
-            return simplify(helper(default_n, default_depth)).__repr__()
-        elif len(vars) == 1:
-            return simplify(helper(int(vars[0]), default_depth)).__repr__()
+        assert len(args) <= 2
+        if len(args) == 0:
+            return do_simplify(helper(default['n'], default['depth'])).__repr__()
+        elif len(args) == 1:
+            return do_simplify(helper(int(args[0]), default['depth'])).__repr__()
         else:
-            return simplify(helper(int(vars[0]), int(vars[1]))).__repr__()
+            return do_simplify(helper(int(args[0]), int(args[1]))).__repr__()
     except (AssertionError, ValueError):
         print(red("Error:") + " wrong number of inputs.\n")
 
-def rtable(n = default_n, depth = default_depth):
-    return print_table([rgen([n, depth])])
+#Generates a random propositional statement (for users)
+def generate(args):
+    print(rgen())
 
-def help():
+#Generates a random table (for users)
+def rtable(args):
+    return table([rgen(args)])
+
+#print_row, footer are both used in both table, qtable. Placed in global to limit code redundancy.
+def print_row(table, t, o, ls):
+        print('║  ' + '  ║  '.join(t[:o]) + '  ║║  ' + \
+            '  ║  '.join(' ' * (ls[i - o] // 2) + t[i] + ' ' * (ls[i - o] // 2 - (1 - ls[i - o] % 2)) for i in range(o, len(table[0]))) + '  ║')
+
+def print_footer(o, ls):
+    print('╚══' + '══╩══'.join('═' for i in range(o)) + '══╩╩══' + '══╩══'.join('═' * l for l in ls) + "══╝\n")
+
+def table(args):
+    statements = [read(statement) for statement in ' '.join(args).split(', ')]
+    tbl, ls = generate_table(statements), [len(str(statement)) for statement in statements]
+    o = len(tbl[0]) - len(statements)
+
+    def print_header():
+        print(bold('Propositional Statement: ') + tbl[0][o] + "\n")
+        print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦╦══' + '══╦══'.join('═' * l for l in ls) + "══╗")
+        print('║  ' + '  ║  '.join(tbl[0][:o]) + '  ║║  ' + '  ║  '.join(tbl[0][i] for i in range(o, len(tbl[0]))) + '  ║')
+        print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬╬══' + '══╬══'.join('═' * l for l in ls) + "══╣")
+
+    print_header()
+    [print_row(tbl, t, o, ls) for t in tbl[1:]]
+    print_footer(o, ls)
+
+def qtable(statements, answer):
+    statements = [read(statement) for statement in statements]
+    table = generate_table(statements)
+    o = len(table[0]) - len(statements)
+
+    def print_qheader():
+        print(bold('Please select the correct truth table for the following statement: ') + statements[q].__repr__() + "\n")
+        print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦╦══' + '══╦══'.join('═') + "══╗")
+        print('║  ' + '  ║  '.join(table[0][:o]) + '  ║║  ' + '  ║  '.join(['a', 'b', 'c', 'd']) + '  ║')
+        print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬╬══' + '══╬══'.join('═') + "══╣")
+
+    print_header()
+    [print_row(table, t, o, [1, 1, 1, 1]) for t in table[1:]]
+    print_footer(o, ls)
+
+#Generates a random question (for user)
+def question(args):
+    a, s = generate_q()
+    qtable(s, a)
+    try:
+        ans = input(bold("Answer: > "))
+        assert ans in ['a', 'b', 'c', 'd']
+    except AssertionError:
+        print(red("Error: ") + "Cannot read answer. ")
+    if ord(ans) - 96 == a:
+        print("Success! Answer is correct.")
+    else:
+        print("Wrong answer. The correct answer is {}".format(a))
+
+#Checks the equivalency of two statements (for users)
+def equals(args):
+    statements = ' '.join(args).split(', ')
+    print("\n" + str(check_equivalency(statements[0], statements[1])) + "\n")
+
+#Simplifies a logical statement (for both users and within the code)
+def simplify(args):
+    statements = ''.join(args)
+    print(do_simplify(read(statements)))
+
+def help(*args):
     print("\nList of commands:\n")
-    print("\t" + bold('help') + "\t\tPulls up this list of information.")
-    print("\t" + bold('rgen') + "\t\tGenerates a random propositional statement.")
-    print("\t" + bold('rtable') + "\t\tGenerates a truth table for a random propositional statement.")
-    print("\t" + bold('table') + "\t\tGenerates a truth table for a propositional statement. Format: 'table <statement>'")
-    print("\t" + bold('equals?') + "\t\tChecks if two statements are equal. Format: 'equals? <statement1>, <statement2>'")
-    print("\t" + bold('simplify') + "\tSimplifies a propositional statement. Format: 'simplify <statement>'")
-    print("\t" + bold('settings') + "\tPulls up a menu to edit the program settings.")
-    print("\t" + bold('quit, exit') + "\tTerminates the program.")
+    for n in commands:
+        print("\t{}\t\t{}.".format(n, commands[n]) if len(n) < 8 else "\t{}\t{}.".format(n, commands[n]))
     print("\n")
 
-def settings():
-    global default_n, default_depth
+def change_setting(var, req, min, max):
+    try:
+        assert req < max and req > min
+        default['var'] = req
+        print('\nSuccess: {} set to {}.\n'.format(var, req))
+    except (AssertionError, ValueError):
+        print(red('Error: ' ) + '{} must be set to integer between {} and {}.\n'.format(var, min, max-1))
+
+def settings(*args):
     print("\nWelcome to the settings panel! Here you may edit the program settings." + \
           "Program settings are wiped at the start of every session; in other words, " + \
           "they " + bold("reset when you exit the program") + ". We haven't yet created an option of saving " + \
           "your settings just yet; they'll be included in the next release!")
     print("\nBelow is a list of parameters and their current values. To change each value, simply type the name of the " + \
           "parameter and your preferred value.")
-    print("\t" + bold('n') + "\t\t" + str(default_n) + "\t\tSets the number of random variables used.")
-    print("\t" + bold('depth') + "\t\t"  + str(default_depth) + "\t\tSets the maximumsize of the randomly generated statements.")
-    print("\nTo leave this panel, please type either " + bold('exit') + " or " + bold('quit') + '.\n')
+    print("\t" + bold('n') + "\t\t" + str(default['n']) + "\t\tSets the number of random variables used.")
+    print("\t" + bold('depth') + "\t\t"  + str(default['depth']) + "\t\tSets the maximumsize of the randomly generated statements.")
+    print('\nTo leave this panel, please type either {} or {} .\n'.format(bold('exit'), bold('quit')))
     while True:
         raw = input(bold('Settings: > '))
         if raw == 'exit' or raw == 'quit':
@@ -357,69 +406,22 @@ def settings():
         if len(inputs) != 2:
             print(red('Error: ' ) + 'wrong number of inputs.\n')
         elif inputs[0] == 'n':
-            try:
-                assert int(inputs[1]) <= len(VS) and int(inputs[1]) > 0
-                default_n = int(inputs[1])
-                print('\nSuccess: n set to ' + str(default_n) + "\n")
-            except (AssertionError, ValueError):
-                print(red('Error: ' ) + 'value must be set to integer between 1 and 26.\n')
+            change_setting('n', int(inputs[1]), 0, len(VS)+1)
         elif inputs[0] == 'depth':
-            try:
-                assert int(inputs[1]) <= 5 and int(inputs[1]) > 0
-                defaut_depth = int(inputs[1])
-                print('\nSuccess: depth set to ' + str(default_depth) + "\n")
-            except (AssertionError, ValueError):
-                print(red('Error: ' ) + 'value must be set to integer between 1 and 5.\n')
+            change_setting('depth', int(inputs[1]), 0, 6)
         else:
             print(red('Error: ' ) + 'Cannot read input variable.')
 
 def run():
     print(chr(27) + "[2J\nWelcome to Propositional Calculator v0.0.4a! Type " + bold('help') + " for a guide to using this program.\n")
     while True:
-        raw = input(bold('> '))
-        if raw[0:5] == 'table':
-            if len(raw) <= 6:
-                print(red('Error: ' ) + 'Need to provide propositional statement.\n')
-            else:
-                try:
-                    print_table(raw[6:])
-                except (SyntaxError, ValueError, NameError, AttributeError):
-                    print(red('Error: ' ) + 'Improperly formatted inputs.\n')
-        elif raw[0:7] == 'equals?':
-            if len(raw) <= 8:
-                print(red('Error: ' ) + 'Need to provide propositional statement.\n')
-            else:
-                try:
-                    statements = raw[8:].split(", ")
-                    print("\n" + str(check_equivalency(statements[0], statements[1])) + "\n")
-                except (SyntaxError, ValueError, NameError, AttributeError):
-                    print(red('Error: ' ) + 'Improperly formatted inputs.\n')
-        elif raw[0:8] == 'simplify':
-            if len(raw) <= 9:
-                print(red('Error: ' ) + 'Need to provide propositional statement.\n')
-            else:
-                try:
-                    print("\n" + str(simplify(read(raw[9:]))) + "\n")
-                except (SyntaxError, ValueError, NameError, AttributeError):
-                    print(red('Error: ' ) + 'Improperly formatted inputs.\n')
-        else:
-            inputs = raw.split(' ')
-            if inputs[0] == 'rgen':
-                if len(inputs) == 1:
-                    print(rgen([]))
-                else:
-                    print(rgen(inputs[1:]))
-            elif inputs[0] == 'rtable':
-                rtable()
-            elif inputs[0] == 'quit' or inputs[0] == 'exit':
-                quit()
-            elif inputs[0] == 'help':
-                help()
-            elif inputs[0] == 'settings':
-                settings()
-            elif inputs[0] == 'question':
-                print_question()
-            else:
-                print(red('Error: ' ) + 'Cannot read input.\n')
+        try:
+            inputs = input(bold('> ')).split(' ')
+            assert inputs[0] in commands
+            eval(inputs[0])(inputs[1:])
+        except (AssertionError, ValueError, TypeError, NameError):
+            print(red('Error: ' ) + 'Cannot read input.')
+        except IndexError:
+            print(red('Error: ') + 'Wrong number of parameters specified')
 
 run()
