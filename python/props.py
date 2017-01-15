@@ -38,7 +38,6 @@ import string, random
 
 chars = {'ALL': '∀', 'EXISTS': '∃', 'EQUALS': '≡', 'AND': '∧', 'OR': '∨', 'NOT': '¬'}
 default = {'n': 3, 'depth': 0}
-
 commands = {
 'about' : 'Prints more information about this program.',
 'help': 'Pulls up this list of information',
@@ -49,7 +48,8 @@ commands = {
 'simplify' : 'Simplifies a propositional statement. Format: "simplify <statement>"',
 'settings' : 'Pulls up a menu to edit the program settings',
 'quit' : 'Terminates the program',
-'exit' : 'Terminates the program'
+'exit' : 'Terminates the program',
+'question' : 'Prints out a quiz question'
 }
 
 def opts(n):
@@ -367,20 +367,20 @@ def table(args):
 def qtable(statements, answer):
     statements = [read(statement) for statement in statements]
     table = generate_table(statements)
-    o = len(table[0]) - len(statements)
+    o, ls = len(table[0]) - len(statements), [1, 1, 1, 1]
 
-    def print_qheader():
-        print(bold('Please select the correct truth table for the following statement: ') + statements[q].__repr__() + "\n")
-        print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦╦══' + '══╦══'.join('═') + "══╗")
+    def print_header():
+        print(bold('Please select the correct truth table for the following statement: ') + statements[answer].__repr__() + "\n")
+        print('╔══' + '══╦══'.join('═' for i in range(o)) + '══╦╦══' + '══╦══'.join('═' for l in ls) + "══╗")
         print('║  ' + '  ║  '.join(table[0][:o]) + '  ║║  ' + '  ║  '.join(['a', 'b', 'c', 'd']) + '  ║')
-        print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬╬══' + '══╬══'.join('═') + "══╣")
+        print('╠══' + '══╬══'.join('═' for i in range(o)) + '══╬╬══' + '══╬══'.join('═' for l in ls) + "══╣")
 
     print_header()
-    [print_row(table, t, o, [1, 1, 1, 1]) for t in table[1:]]
+    [print_row(table, t, o, ls) for t in table[1:]]
     print_footer(o, ls)
 
 #Generates a random question (for user)
-def question(args):
+def question(*args):
     a, s = generate_q()
     qtable(s, a)
     try:
@@ -388,10 +388,10 @@ def question(args):
         assert ans in ['a', 'b', 'c', 'd']
     except AssertionError:
         print(red("Error: ") + "Cannot read answer. ")
-    if ord(ans) - 96 == a:
+    if ord(ans) - 96 == a + 1:
         print("Success! Answer is correct.")
     else:
-        print("Wrong answer. The correct answer is {}".format(a))
+        print("Wrong answer. The correct answer is {}.".format(['a', 'b', 'c', 'd'][a]))
 
 #Checks the equivalency of two statements (for users)
 def equals(args):
@@ -422,11 +422,10 @@ def settings(*args):
     print("\nWelcome to the settings panel! Here you may edit the program settings." + \
           "Program settings are wiped at the start of every session; in other words, " + \
           "they " + bold("reset when you exit the program") + ". We haven't yet created an option of saving " + \
-          "your settings just yet; they'll be included in the next release!")
-    print("\nBelow is a list of parameters and their current values. To change each value, simply type the name of the " + \
-          "parameter and your preferred value.")
-    print("\t" + bold('n') + "\t\t" + str(default['n']) + "\t\tSets the number of random variables used.")
-    print("\t" + bold('depth') + "\t\t"  + str(default['depth']) + "\t\tSets the maximumsize of the randomly generated statements.")
+          "your settings just yet; they'll be included in the next release!\nBelow is a list of parameters " + \
+          "and their current values. To change each value, simply type the name of the parameter and your preferred value.")
+    print("\t{}\t\t{}\t\tSets the number of random variables used.".format(bold('n'), default['n']))
+    print("\t{}\t\t{}\t\tSets the maximumsize of the randomly generated statements.".format(bold('depth'), default['depth']))
     print('\nTo leave this panel, please type either {} or {} .\n'.format(bold('exit'), bold('quit')))
     while True:
         raw = input(bold('Settings: > '))
@@ -447,7 +446,7 @@ def about(*args):
     print(copyright)
 
 def run():
-    print(chr(27) + "[2J\nWelcome to Propositional Calculator v0.0.4a! Type " + bold('help') + " for a guide to using this program.\n")
+    print(chr(27) + "[2J\nWelcome to Propositional Calculator v0.0.5a! Type " + bold('help') + " for a guide to using this program.\n")
     while True:
         try:
             inputs = input(bold('> ')).split(' ')
