@@ -447,7 +447,7 @@ def about(*args):
     print(copyright)
 
 def run():
-    print("{}[2J\nWelcome to Propositional Calculator v0.0.5a! Type {} for a guide to using this program.\n".format(chr(27), bold('help')))
+    print("{}[2J\nWelcome to Propositional Calculator v0.1b! Type {} for a guide to using this program.\n".format(chr(27), bold('help')))
     while True:
         try:
             inputs = input(bold('> ')).split(' ')
