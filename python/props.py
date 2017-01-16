@@ -224,6 +224,8 @@ def read(propositional):
             if string[0] == chars['NOT']:
                 return Not(helper(string[1:]))
             return eval(string[0])
+        elif string[0:3] == '({}('.format(chars['NOT']) and string[len(string)-1] == ')':
+            return Not(helper(string[2:len(string)-1]))
         else:
             parens, loc, found = 0, 0, False
             while loc < len(string) - 1 and not found:
@@ -312,26 +314,21 @@ depth corresponds to the maximum allocated depth of statement
 '''
 def rgen(args):
     def helper(n, depth):
-        vs = variables(n)
         if depth < 3 and random.random() > (depth/default['n'])/5:
-            x, depth = int(random.random()*3), depth + 1
             return {
-                0: Not(helper(n, depth)),
-                1: And(helper(n, depth), helper(n, depth)),
-                2: Or(helper(n, depth), helper(n, depth))
-            }[x]
+                0: Not(helper(n, depth + 1)),
+                1: And(helper(n, depth + 1), helper(n, depth + 1)),
+                2: Or(helper(n, depth + 1), helper(n, depth + 1))
+            }[int(random.random()*3)]
         else:
             return random.choice(VS[:n])
-    try:
-        assert len(args) <= 2
-        if len(args) == 0:
-            return do_simplify(helper(default['n'], default['depth'])).__repr__()
-        elif len(args) == 1:
-            return do_simplify(helper(int(args[0]), default['depth'])).__repr__()
-        else:
-            return do_simplify(helper(int(args[0]), int(args[1]))).__repr__()
-    except (AssertionError, ValueError):
-        print(red("Error:") + " wrong number of inputs.\n")
+    assert len(args) <= 2
+    if len(args) == 0:
+        return do_simplify(helper(default['n'], default['depth'])).__repr__()
+    elif len(args) == 1:
+        return do_simplify(helper(int(args[0]), default['depth'])).__repr__()
+    else:
+        return do_simplify(helper(int(args[0]), int(args[1]))).__repr__()
 
 #Generates a random propositional statement (for users)
 def generate(args):
@@ -400,7 +397,7 @@ def equals(args):
 
 #Simplifies a logical statement (for both users and within the code)
 def simplify(args):
-    statements = ''.join(args)
+    statements = ' '.join(args)
     print(do_simplify(read(statements)))
 
 def help(*args):
