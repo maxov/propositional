@@ -226,8 +226,10 @@ def read(propositional):
             return eval(string[0])
         elif string[0:3] == '({}('.format(chars['NOT']) and string[len(string)-1] == ')':
             return Not(helper(string[2:len(string)-1]))
-        elif string[0:2] == '((' and string[len(string)-1] == ')':
+        elif len(string) > 4 and string[0:2] == '((' and string[len(string)-2:len(string)] == '))':
             return helper(string[1:len(string)-1])
+        elif len(string) == 3 and string[0] == '(' and string[2] == ')':
+            return eval(string[1])
         else:
             parens, loc, found = 0, 0, False
             while loc < len(string) - 1 and not found:
