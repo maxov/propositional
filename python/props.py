@@ -226,6 +226,8 @@ def read(propositional):
             return eval(string[0])
         elif string[0:3] == '({}('.format(chars['NOT']) and string[len(string)-1] == ')':
             return Not(helper(string[2:len(string)-1]))
+        elif string[0:2] == '((' and string[len(string)-1] == ')':
+            return helper(string[1:len(string)-1])
         else:
             parens, loc, found = 0, 0, False
             while loc < len(string) - 1 and not found:
@@ -410,8 +412,8 @@ def change_setting(var, req, min, max):
     global default
     try:
         assert req < max and req > min
-        default['var'] = req
-        print('\nSuccess: {} set to {}.\n'.format(var, default['var']))
+        default[var] = req
+        print('\nSuccess: {} set to {}.\n'.format(var, req))
     except (AssertionError, ValueError):
         print(red('Error: ' ) + '{} must be set to integer between {} and {}.\n'.format(var, min, max-1))
 
@@ -443,7 +445,7 @@ def about(*args):
     print(copyright)
 
 def run():
-    print(chr(27) + "[2J\nWelcome to Propositional Calculator v0.0.5a! Type " + bold('help') + " for a guide to using this program.\n")
+    print("{}[2J\nWelcome to Propositional Calculator v0.0.5a! Type {} for a guide to using this program.\n".format(chr(27), bold('help')))
     while True:
         try:
             inputs = input(bold('> ')).split(' ')
